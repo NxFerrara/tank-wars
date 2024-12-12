@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Tank Wars",
+            "request": "launch",
+            "mainClass": "com.tankwars.Main",
+            "vmArgs": "--module-path \"${workspaceFolder}/target/dependency\" --add-modules javafx.controls,javafx.fxml",
+            "preLaunchTask": "Copy JavaFX Dependencies"
+        }
+    ]
+} 

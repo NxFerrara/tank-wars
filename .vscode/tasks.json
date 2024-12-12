@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Copy JavaFX Dependencies",
+            "type": "shell",
+            "command": "mvn dependency:copy-dependencies",
+            "group": "build"
+        }
+    ]
+} 
