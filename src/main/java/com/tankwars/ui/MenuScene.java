@@ -1,7 +1,7 @@
 package com.tankwars.ui;
 
-
 import com.tankwars.game.GameManager;
+import com.tankwars.utils.SoundManager;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
@@ -16,14 +16,26 @@ public class MenuScene extends Scene {
     public MenuScene(GameManager gameManager) {
         super(new StackPane(), 800, 800);
         this.gameManager = gameManager;
+        
+        // Initialize and load sounds
+        SoundManager.loadSounds();
     }
 
     public Scene createMenuScene(Stage primaryStage) {
+        // Start playing menu music
+        SoundManager.playMusic("menu_music");
+        
         Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 50);
 
         Button playButton = new Button("Play");
         Button rulesButton = new Button("Rules");
         Button quitButton = new Button("Quit");
+        
+        // Add hover sound effects to buttons
+        playButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
+        rulesButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
+        quitButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
+        
         playButton.setFont(customFont);
         rulesButton.setFont(customFont);
         quitButton.setFont(customFont);
@@ -42,14 +54,20 @@ public class MenuScene extends Scene {
         playButton.setPrefWidth(300);
         rulesButton.setPrefWidth(300);
 
-        playButton.setOnMouseEntered(e -> playButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a")));
-        playButton.setOnMouseExited(e -> playButton.setStyle(defaultButtonStyle));
-
-        rulesButton.setOnMouseEntered(e -> rulesButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a")));
-        rulesButton.setOnMouseExited(e -> rulesButton.setStyle(defaultButtonStyle));
-
-        quitButton.setOnMouseEntered(e -> quitButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a")));
-        quitButton.setOnMouseExited(e -> quitButton.setStyle(defaultButtonStyle));
+        playButton.setOnMouseEntered(e -> {
+            playButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            SoundManager.playSound("button_click");
+        });
+        
+        rulesButton.setOnMouseEntered(e -> {
+            rulesButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            SoundManager.playSound("button_click");
+        });
+        
+        quitButton.setOnMouseEntered(e -> {
+            quitButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            SoundManager.playSound("button_click");
+        });
 
         // Set button actions
         playButton.setOnAction(e -> startGame(primaryStage));
@@ -67,6 +85,9 @@ public class MenuScene extends Scene {
     }
 
     private void startGame(Stage primaryStage) {
+        // Stop menu music before starting game
+        SoundManager.stopMusic();
+        
         // Create and set up the game scene
         GameScene gameScene = new GameScene(null);
         gameManager = new GameManager(gameScene);
