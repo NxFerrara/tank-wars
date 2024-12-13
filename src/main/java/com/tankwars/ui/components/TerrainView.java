@@ -3,22 +3,36 @@ package com.tankwars.ui.components;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
 import com.tankwars.game.GameManager;
-import com.tankwars.entities.Tank;
 import javafx.animation.AnimationTimer;
+import java.util.Random;
 
 public class TerrainView extends Canvas {
     private GameManager gameManager;
+    private final SkyRenderer skyRenderer;
+    private final double[] noisePattern;
+    private static final Color TERRAIN_COLOR = Color.rgb(34, 139, 34); // Forest Green
     
     public TerrainView(GameManager gameManager) {
         super(800, 600);
         this.gameManager = gameManager;
         
-        // Set up continuous rendering
+        // Initialize sky renderer
+        skyRenderer = new SkyRenderer(getWidth(), getHeight());
+        
+        // Generate noise pattern
+        Random random = new Random();
+        noisePattern = new double[800];
+        for (int i = 0; i < noisePattern.length; i++) {
+            noisePattern[i] = random.nextDouble() * 0.2;
+        }
+        
         AnimationTimer renderer = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                skyRenderer.update();
                 draw();
             }
         };
@@ -31,49 +45,70 @@ public class TerrainView extends Canvas {
     
     private void draw() {
         GraphicsContext gc = getGraphicsContext2D();
+        Terrain terrain = gameManager.getTerrain();
         
-        // Draw sky
-        gc.setFill(Color.SKYBLUE);
-        gc.fillRect(0, 0, getWidth(), getHeight());
+        // Clear the canvas
+        gc.clearRect(0, 0, getWidth(), getHeight());
+        
+        // Draw sky and clouds first
+        skyRenderer.render(gc);
         
         // Draw terrain
-        Terrain terrain = gameManager.getTerrain();
-        double[] heights = terrain.getHeights();
-        
-        gc.setStroke(Color.GREEN);
-        gc.setLineWidth(2);
+        gc.save();
         gc.beginPath();
         gc.moveTo(0, getHeight());
         
-        for (int x = 0; x < heights.length; x++) {
-            gc.lineTo(x, heights[x]);
+        for (int x = 0; x < terrain.getWidth(); x++) {
+            gc.lineTo(x, terrain.getHeightAt(x));
         }
-        
         gc.lineTo(getWidth(), getHeight());
         gc.closePath();
-        gc.setFill(Color.GREEN);
+        
+        gc.setFill(TERRAIN_COLOR);
         gc.fill();
-        gc.stroke();
+        
+        // Apply terrain noise
+        for (int x = 0; x < terrain.getWidth(); x++) {
+            double height = terrain.getHeightAt(x);
+            double noiseOffset = noisePattern[x % noisePattern.length] * 5;
+            gc.setGlobalAlpha(0.1);
+            gc.setStroke(Color.rgb(0, 0, 0, 0.1));
+            gc.strokeLine(x, height + noiseOffset, x, height);
+        }
+        gc.restore();
         
         // Draw tanks
-        drawTank(gc, gameManager.getPlayer1());
-        drawTank(gc, gameManager.getPlayer2());
+        Tank player1 = gameManager.getPlayer1();
+        Tank player2 = gameManager.getPlayer2();
+        
+        drawTank(gc, player1);
+        drawTank(gc, player2);
     }
     
     private void drawTank(GraphicsContext gc, Tank tank) {
         gc.save();
         
-        // Draw barrel first
+        // Move to tank position
+        gc.translate(tank.getX(), tank.getY());
+        
+        // Rotate for terrain angle (convert from radians to degrees)
+        gc.rotate(Math.toDegrees(tank.getTerrainAngle()));
+        
+        // Draw barrel first (behind tank body)
         gc.save();
-        gc.translate(tank.getX(), tank.getY() - 6);
-        gc.rotate(Math.toDegrees(tank.getBarrelAngle()));
-        gc.drawImage(tank.getBarrelSprite(), -3, -15);
+        // Move to barrel pivot point (75% up from bottom of tank body)
+        double barrelPivotY = -tank.getBodySprite().getHeight() * 0.5;
+        gc.translate(0, barrelPivotY);
+        gc.rotate(tank.getBarrelAngle());
+        gc.drawImage(tank.getBarrelSprite(),
+                    -tank.getBarrelSprite().getWidth() / 2,
+                    -tank.getBarrelSprite().getHeight() / 2);
         gc.restore();
         
-        // Draw rotated tank body
-        gc.translate(tank.getX(), tank.getY());
-        gc.rotate(Math.toDegrees(tank.getTerrainAngle()));
-        gc.drawImage(tank.getBodySprite(), -14.5, -8.5);
+        // Draw tank body on top
+        gc.drawImage(tank.getBodySprite(), 
+                    -tank.getBodySprite().getWidth() / 2, 
+                    -tank.getBodySprite().getHeight() / 2);
         
         gc.restore();
     }

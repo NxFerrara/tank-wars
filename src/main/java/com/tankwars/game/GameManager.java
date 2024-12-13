@@ -38,26 +38,48 @@ public class GameManager {
     
     private void setupInput(Scene scene) {
         scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.A) leftPressed = true;
-            if (e.getCode() == KeyCode.D) rightPressed = true;
+            if (e.getCode() == KeyCode.A) {
+                leftPressed = true;
+                updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.D) {
+                rightPressed = true;
+                updateTankMovement();
+            }
         });
         
         scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.A) leftPressed = false;
-            if (e.getCode() == KeyCode.D) rightPressed = false;
+            if (e.getCode() == KeyCode.A) {
+                leftPressed = false;
+                updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.D) {
+                rightPressed = false;
+                updateTankMovement();
+            }
         });
     }
     
+    private void updateTankMovement() {
+        if (leftPressed && rightPressed) {
+            // Both keys pressed - stop movement
+            player1.stopLeft();
+            player1.stopRight();
+        } else if (leftPressed) {
+            player1.stopRight();
+            player1.moveLeft();
+        } else if (rightPressed) {
+            player1.stopLeft();
+            player1.moveRight();
+        } else {
+            // No keys pressed
+            player1.stopLeft();
+            player1.stopRight();
+        }
+    }
+    
     private void update() {
-        // Handle movement
-        if (leftPressed) player1.moveLeft();
-        if (rightPressed) player1.moveRight();
-        
-        // Update tank physics
-        player1.update();
-        player2.update();
-        
-        // Apply terrain physics
+        // Apply physics to both tanks
         physics.update(player1, terrain);
         physics.update(player2, terrain);
     }

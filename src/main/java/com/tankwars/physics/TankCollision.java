@@ -48,8 +48,8 @@ public class TankCollision {
         }
     }
     
-    private static final double CONTACT_BUFFER = 2.0;  // Buffer distance in pixels
-    private static final double MIN_CONTACT_DISTANCE = 5.0;  // Minimum distance between contact points
+    private static final double CONTACT_BUFFER = 1.0;  // Reduced from 2.0
+    private static final double MIN_CONTACT_DISTANCE = 4.0;  // Reduced from 5.0
     
     public static List<ContactPoint> findContactPoints(double tankX, double tankY, 
             double tankAngle, Terrain terrain) {
@@ -96,10 +96,9 @@ public class TankCollision {
                 double bufferHeight = terrainHeight - CONTACT_BUFFER;
                 
                 if (y >= bufferHeight) {
-                    double depth = y - terrainHeight;
+                    double depth = y - terrainHeight + (TANK_HEIGHT / 2.0);
                     ContactPoint newContact = new ContactPoint(x, terrainHeight, depth);
                     
-                    // Only add if it's far enough from the last contact point
                     if (lastContact == null || 
                         distance(lastContact.x, lastContact.y, x, terrainHeight) >= MIN_CONTACT_DISTANCE) {
                         contacts.add(newContact);
