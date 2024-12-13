@@ -28,11 +28,12 @@ public class MenuScene extends Scene {
         rulesButton.setFont(customFont);
         quitButton.setFont(customFont);
 
-        String defaultButtonStyle = "-fx-font-size: 16px;"
+        String defaultButtonStyle = "-fx-font-size: 20px;"
                 + "-fx-text-fill: white;"
                 + "-fx-background-color: #000000;"
                 + "-fx-background-radius: 5px;"
-                + "-fx-padding: 10;";
+                + "-fx-padding: 10;"
+                + "-fx-font-weight: bold";
         playButton.setStyle(defaultButtonStyle);
         rulesButton.setStyle(defaultButtonStyle);
         quitButton.setStyle(defaultButtonStyle);
