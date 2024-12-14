@@ -18,6 +18,7 @@ public class Tank {
     private final Image bodySprite;
     private final Image barrelSprite;
     private int fuel; // Fuel for the tank
+    public int hp;
 
     
     public Tank(double x, double y, String color) {
@@ -25,6 +26,7 @@ public class Tank {
         this.y = y;
         this.terrainAngle = 0;
         this.fuel = 300;
+        this.hp = 100;
         this.barrelAngle = 0;
         this.velocity = 0;
         this.isMovingLeft = false;
@@ -49,10 +51,19 @@ public class Tank {
     public void stopRight() { isMovingRight = false; }
 
     public void consumeFuel() { fuel--; }
+    public void takeDamage(int damage){
+        if (hp - damage > 0){
+            hp -= damage;
+        }
+        else{
+            hp = 0;
+        }
+    }
     
     // Getters and setters
     public double getX() { return x; }
     public double getY() { return y; }
+    public int gethp() { return hp; }
     public int getFuel() { return fuel; }
     public double getBarrelAngle() { return barrelAngle; }
     public double getTerrainAngle() { return terrainAngle; }

@@ -47,6 +47,14 @@ public class GameManager {
     private final Label player2FuelText;
     private final int player1MaxFuel;
     private final int player2MaxFuel;
+    private final VBox player1HPBox;
+    private final VBox player2HPBox;
+    private final Rectangle player1HP;
+    private final Rectangle player2HP;
+    private final Label player1HPText;
+    private final Label player2HPText;
+    private final int player1MaxHP;
+    private final int player2MaxHP;
 
 
     
@@ -63,30 +71,55 @@ public class GameManager {
         player2 = new Tank(700, heights[700] - 20, "red");
         player1MaxFuel = player1.getFuel();
         player2MaxFuel = player2.getFuel();
-        player1FuelTank = new Rectangle(30, 100, javafx.scene.paint.Color.BLUE); // Player 1 fuel tank
+        player1MaxHP = player1.gethp();
+        player2MaxHP = player2.gethp();
+        player1FuelTank = new Rectangle(40, 100, javafx.scene.paint.Color.YELLOW); // Player 1 fuel tank
         player1FuelText = new Label(String.valueOf(player1.getFuel()));
         player1FuelText.setStyle("-fx-text-fill: blue;");
         player1FuelText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
-        Label player1Label = new Label("Fuel");
-        player1Label.setStyle("-fx-text-fill: blue;");
-        player1Label.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
+        Label player1FuelLabel = new Label("P1 Fuel");
+        player1FuelLabel.setStyle("-fx-text-fill: blue;");
+        player1FuelLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
 
-        player1FuelBox = new VBox(5, player1Label, player1FuelTank, player1FuelText); // Add label, tank, and text
+        player1FuelBox = new VBox(5, player1FuelLabel, player1FuelTank, player1FuelText); // Add label, tank, and text
         player1FuelBox.setAlignment(Pos.BOTTOM_LEFT); // Align contents to the bottom-left
         StackPane.setAlignment(player1FuelBox, Pos.BOTTOM_LEFT);
-        StackPane.setMargin(player1FuelBox, new Insets(10, 0, 50, 20));
+        StackPane.setMargin(player1FuelBox, new Insets(10, 0, 50, 60));
+        player1HP = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Player 1 fuel tank
+        player1HPText = new Label(String.valueOf(player1.gethp()));
+        player1HPText.setStyle("-fx-text-fill: blue;");
+        player1HPText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
+        Label player1HPLabel = new Label("P1 HP");
+        player1HPLabel.setStyle("-fx-text-fill: blue;");
+        player1HPLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
+
+        player1HPBox = new VBox(5, player1HPLabel, player1HP, player1HPText); // Add label, tank, and text
+        player1HPBox.setAlignment(Pos.BOTTOM_LEFT); // Align contents to the bottom-left
+        StackPane.setAlignment(player1HPBox, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(player1HPBox, new Insets(10, 0, 50, 10));
         // Player 2 Fuel Tank (Rectangle + Number + Label)
-        player2FuelTank = new Rectangle(30, 100, javafx.scene.paint.Color.RED); // Start full
+        player2FuelTank = new Rectangle(40, 100, javafx.scene.paint.Color.YELLOW); // Start full
         player2FuelText = new Label(String.valueOf(player2.getFuel()));
         player2FuelText.setStyle("-fx-text-fill:rgb(148, 5, 5);");
         player2FuelText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
-        Label player2Label = new Label("Fuel");
-        player2Label.setStyle("-fx-text-fill: rgb(148, 5, 5);");
-        player2Label.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
-        player2FuelBox = new VBox(5, player2Label, player2FuelTank, player2FuelText);
+        Label player2FuelLabel = new Label("P2 Fuel");
+        player2FuelLabel.setStyle("-fx-text-fill: rgb(148, 5, 5);");
+        player2FuelLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
+        player2FuelBox = new VBox(5, player2FuelLabel, player2FuelTank, player2FuelText);
         player2FuelBox.setAlignment(Pos.BOTTOM_RIGHT);
         StackPane.setAlignment(player2FuelBox, Pos.BOTTOM_RIGHT);
-        StackPane.setMargin(player2FuelBox, new Insets(10, 10, 50, 0));
+        StackPane.setMargin(player2FuelBox, new Insets(10, 60, 50, 0));
+        player2HP = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Start full
+        player2HPText = new Label(String.valueOf(player2.gethp()));
+        player2HPText.setStyle("-fx-text-fill:rgb(148, 5, 5);");
+        player2HPText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
+        Label player2HPLabel = new Label("P2 HP");
+        player2HPLabel.setStyle("-fx-text-fill: rgb(148, 5, 5);");
+        player2HPLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
+        player2HPBox = new VBox(5, player2HPLabel, player2HP, player2HPText);
+        player2HPBox.setAlignment(Pos.BOTTOM_RIGHT);
+        StackPane.setAlignment(player2HPBox, Pos.BOTTOM_RIGHT);
+        StackPane.setMargin(player2HPBox, new Insets(10, 10, 50, 0));
         timerLabel = new Label("Time Remaining: 120 seconds");
         timerLabel.setFont(Font.loadFont("file:src/main/resources/fonts/PressStart2P-Regular.ttf", 16));
         timerLabel.setStyle("-fx-text-fill: #000000;");
@@ -128,8 +161,8 @@ public class GameManager {
         );
         endTurnButton.setOnAction(e -> manuallyEndTurn());
         StackPane.setAlignment(endTurnButton, Pos.BOTTOM_CENTER);
-        root.getChildren().addAll(terrainView,player1FuelBox, player2FuelBox, timerLabel, turnBanner, 
-            endTurnButton);
+        root.getChildren().addAll(terrainView,player1FuelBox, player2FuelBox, 
+            player1HPBox, player2HPBox, timerLabel, turnBanner, endTurnButton);
         setupInput(gameScene);
         setupTurnTimer();
         gameLoop = new AnimationTimer() {
