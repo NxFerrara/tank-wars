@@ -143,8 +143,6 @@ public class GameManager {
         }
     }
     
-    private void update() {
-        // Apply physics to both tanks
     private void setupTurnTimer() {
         turnTimer = new Timeline(
             new KeyFrame(Duration.seconds(1), e -> {
