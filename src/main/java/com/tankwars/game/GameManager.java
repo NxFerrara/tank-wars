@@ -1,5 +1,6 @@
 package com.tankwars.game;
 
+import com.tankwars.entities.Projectile;
 import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
 import com.tankwars.physics.PhysicsEngine;
@@ -12,9 +13,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -33,9 +37,8 @@ public class GameManager {
     private boolean player1Turn = true; // Player 1 starts the game
     private int timeRemaining = 120; // 120 seconds per turn
     private Timeline turnTimer;
-    private final Button endTurnButton;
-
-
+    private final Button fireButton;
+    private final ComboBox<Projectile> projectileSelector;
     private final Label timerLabel;
     private final Label turnBanner; // Label to display whose turn it is
     private final TerrainView terrainView;
@@ -134,35 +137,86 @@ public class GameManager {
         StackPane.setMargin(turnBanner, new Insets(5, 0, 0, 15)); // 10px margin from the top
 
         terrainView = new TerrainView(this);
-        endTurnButton = new Button("End Turn");
-        endTurnButton.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 20));
-        endTurnButton.setStyle(
+        fireButton = new Button("Fire");
+        fireButton.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 20));
+        fireButton.setStyle(
             "-fx-text-fill: white;" +
             "-fx-background-color: #4caf50;" + 
             "-fx-border-radius: 5px;" +
             "-fx-padding: 10;" 
         );
 
-        endTurnButton.setOnMouseEntered(e -> 
-            endTurnButton.setStyle(
+        fireButton.setOnMouseEntered(e -> 
+            fireButton.setStyle(
                 "-fx-text-fill: white;" +
                 "-fx-background-color: #45a049;" + 
                 "-fx-border-radius: 5px;" +
                 "-fx-padding: 10;" 
             )
         );
-        endTurnButton.setOnMouseExited(e -> 
-            endTurnButton.setStyle(
+        fireButton.setOnMouseExited(e -> 
+            fireButton.setStyle(
                 "-fx-text-fill: white;" +
                 "-fx-background-color: #4caf50;" + 
                 "-fx-border-radius: 5px;" +
                 "-fx-padding: 10;"
             )
         );
-        endTurnButton.setOnAction(e -> manuallyEndTurn());
-        StackPane.setAlignment(endTurnButton, Pos.BOTTOM_CENTER);
-        root.getChildren().addAll(terrainView,player1FuelBox, player2FuelBox, 
-            player1HPBox, player2HPBox, timerLabel, turnBanner, endTurnButton);
+        fireButton.setOnAction(e -> manuallyEndTurn());
+        StackPane.setAlignment(fireButton, Pos.BOTTOM_CENTER);
+        projectileSelector = new ComboBox<Projectile>();
+
+        // Add projectile types with images
+        projectileSelector.getItems().addAll(
+                new Projectile("Basic", "file:src/main/resources/images/basic.png"),
+                new Projectile("Big Bomb", "file:src/main/resources/images/bigbomb.png"),
+                new Projectile("Cluster Bomb", "file:src/main/resources/images/clusterbomb.png"),
+                new Projectile("Sniper", "file:src/main/resources/images/sniper.png")
+        );
+        projectileSelector.setValue(projectileSelector.getItems().get(0)); // Default to the first item
+
+        // Set custom ListCell for rendering each item
+        projectileSelector.setCellFactory(param -> new ListCell<>() {
+            private final ImageView imageView = new ImageView();
+
+            @Override
+            protected void updateItem(Projectile item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
+                    setText(item.getName());
+                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true)); // Set image size
+                    setGraphic(imageView); // Add image to the cell
+                }
+            }
+        });
+
+        // Also set the appearance of the selected item in the dropdown button
+        projectileSelector.setButtonCell(new ListCell<>() {
+            private final ImageView imageView = new ImageView();
+
+            @Override
+            protected void updateItem(Projectile item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
+                    setText(item.getName());
+                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
+                    setGraphic(imageView);
+                }
+            }
+        });    
+        projectileSelector.setPrefWidth(150);
+        StackPane.setAlignment(projectileSelector, Pos.BOTTOM_CENTER);
+        StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0)); // 10px margin from the top
+        root.getChildren().addAll( terrainView,player1FuelBox, player2FuelBox, 
+            player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector);
         setupInput(gameScene);
         setupTurnTimer();
         gameLoop = new AnimationTimer() {
@@ -184,6 +238,10 @@ public class GameManager {
             if (e.getCode() == KeyCode.D) {
                 rightPressed = true;
                 updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.SPACE){
+                fire();
+                endTurn();
             }
         });
         
@@ -255,6 +313,10 @@ public class GameManager {
             }
         }
         
+    }
+    private void fire(){
+        projectileSelector.getValue();
+        endTurn();
     }
     
     private void setupTurnTimer() {
