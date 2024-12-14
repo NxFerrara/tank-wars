@@ -4,6 +4,8 @@ import com.tankwars.game.GameManager;
 import com.tankwars.utils.SoundManager;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -25,50 +27,64 @@ public class MenuScene extends Scene {
         // Start playing menu music
         SoundManager.playMusic("menu_music");
         
-        Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 50);
+        Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 36);
 
         Button playButton = new Button("Play");
         Button rulesButton = new Button("Rules");
         Button quitButton = new Button("Quit");
-        
-        // Add hover sound effects to buttons
-        playButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
-        rulesButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
-        quitButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
-        
         playButton.setFont(customFont);
         rulesButton.setFont(customFont);
         quitButton.setFont(customFont);
-
-        String defaultButtonStyle = "-fx-font-size: 20px;"
-                + "-fx-text-fill: white;"
+        String defaultButtonStyle = "-fx-text-fill: white;"
                 + "-fx-background-color: #000000;"
                 + "-fx-background-radius: 5px;"
                 + "-fx-padding: 10;"
                 + "-fx-font-weight: bold";
+        String hoverButtonStyle = "-fx-text-fill: white;"
+                + "-fx-background-color: #1a1a1a;" // Slightly lighter black
+                + "-fx-background-radius: 5px;"
+                + "-fx-padding: 10;"
+                + "-fx-font-weight: bold;";
+        String pressButtonStyle = "-fx-text-fill: white;"
+                + "-fx-background-color: #333333;" 
+                + "-fx-background-radius: 5px;"
+                + "-fx-padding: 10;" 
+                + "-fx-font-weight: bold;";
         playButton.setStyle(defaultButtonStyle);
         rulesButton.setStyle(defaultButtonStyle);
         quitButton.setStyle(defaultButtonStyle);
-
-        quitButton.setPrefWidth(300);
         playButton.setPrefWidth(300);
         rulesButton.setPrefWidth(300);
+        quitButton.setPrefWidth(300);
+        playButton.setFocusTraversable(false);
+        rulesButton.setFocusTraversable(false);
+        quitButton.setFocusTraversable(false);
 
+        // Add hover sound effects to buttons
+        playButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
+        rulesButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
+        quitButton.setOnMouseEntered(e -> SoundManager.playSound("button_click"));
         playButton.setOnMouseEntered(e -> {
-            playButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            playButton.setStyle(hoverButtonStyle);
             SoundManager.playSound("button_click");
         });
-        
+        playButton.setOnMouseExited(e -> playButton.setStyle(defaultButtonStyle));
+        playButton.setOnMousePressed(e -> playButton.setStyle(pressButtonStyle));
+        playButton.setOnMouseReleased(e -> playButton.setStyle(defaultButtonStyle));
         rulesButton.setOnMouseEntered(e -> {
-            rulesButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            rulesButton.setStyle(hoverButtonStyle); 
             SoundManager.playSound("button_click");
         });
-        
+        rulesButton.setOnMouseExited(e -> rulesButton.setStyle(defaultButtonStyle));
+        rulesButton.setOnMousePressed(e -> rulesButton.setStyle(pressButtonStyle));
+        rulesButton.setOnMouseReleased(e -> rulesButton.setStyle(defaultButtonStyle));
         quitButton.setOnMouseEntered(e -> {
-            quitButton.setStyle(defaultButtonStyle.replace("#000000", "#1a1a1a"));
+            quitButton.setStyle(hoverButtonStyle); 
             SoundManager.playSound("button_click");
         });
-
+        quitButton.setOnMouseExited(e -> quitButton.setStyle(defaultButtonStyle)); 
+        quitButton.setOnMousePressed(e -> quitButton.setStyle(pressButtonStyle));
+        quitButton.setOnMouseReleased(e -> quitButton.setStyle(defaultButtonStyle));
         // Set button actions
         playButton.setOnAction(e -> startGame(primaryStage));
         rulesButton.setOnAction(e -> showRules(primaryStage));
@@ -90,7 +106,7 @@ public class MenuScene extends Scene {
         
         // Create and set up the game scene
         GameScene gameScene = new GameScene(null);
-        gameManager = new GameManager(gameScene);
+        GameManager gameManager = new GameManager(gameScene);
         gameScene.setGameManager(gameManager);
 
         primaryStage.setScene(gameScene);
@@ -102,9 +118,8 @@ public class MenuScene extends Scene {
         layout.setStyle("-fx-alignment: center; -fx-background-color: #1b1b1b; -fx-padding: 20;");
         Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 36);
 
-        String defaultButtonStyle = "-fx-font-size: 16px;"
-                + "-fx-text-fill: white;"
-                + "-fx-background-color: #4caf50;"
+        String defaultButtonStyle = "-fx-text-fill: white;"
+                + "-fx-background-color: #000000;"
                 + "-fx-background-radius: 5px;"
                 + "-fx-padding: 10;";
         Button backButton = new Button("Back to Menu");
@@ -118,7 +133,7 @@ public class MenuScene extends Scene {
 
         layout.getChildren().add(backButton);
 
-        Scene rulesScene = new Scene(layout, 800, 600);
+        Scene rulesScene = new Scene(layout, 800, 800);
         primaryStage.setScene(rulesScene);
     }
 } 
