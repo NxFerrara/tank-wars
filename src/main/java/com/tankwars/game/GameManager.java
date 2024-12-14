@@ -126,21 +126,41 @@ public class GameManager {
     }
     
     private void updateTankMovement() {
-        if (leftPressed && rightPressed) {
-            // Both keys pressed - stop movement
-            player1.stopLeft();
-            player1.stopRight();
-        } else if (leftPressed) {
-            player1.stopRight();
-            player1.moveLeft();
-        } else if (rightPressed) {
-            player1.stopLeft();
-            player1.moveRight();
-        } else {
-            // No keys pressed
-            player1.stopLeft();
-            player1.stopRight();
+        if (player1Turn){
+            if (leftPressed && rightPressed) {
+                // Both keys pressed - stop movement
+                player1.stopLeft();
+                player1.stopRight();
+            } else if (leftPressed) {
+                player1.stopRight();
+                player1.moveLeft();
+            } else if (rightPressed) {
+                player1.stopLeft();
+                player1.moveRight();
+            } else {
+                // No keys pressed
+                player1.stopLeft();
+                player1.stopRight();
+            }
         }
+        else{
+            if (leftPressed && rightPressed) {
+                // Both keys pressed - stop movement
+                player2.stopLeft();
+                player2.stopRight();
+            } else if (leftPressed) {
+                player2.stopRight();
+                player2.moveLeft();
+            } else if (rightPressed) {
+                player2.stopLeft();
+                player2.moveRight();
+            } else {
+                // No keys pressed
+                player2.stopLeft();
+                player2.stopRight();
+            }
+        }
+        
     }
     
     private void setupTurnTimer() {
