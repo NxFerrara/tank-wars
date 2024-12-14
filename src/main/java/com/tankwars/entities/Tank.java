@@ -17,11 +17,14 @@ public class Tank {
     private boolean isMovingRight;
     private final Image bodySprite;
     private final Image barrelSprite;
+    private int fuel; // Fuel for the tank
+
     
     public Tank(double x, double y, String color) {
         this.x = x;
         this.y = y;
         this.terrainAngle = 0;
+        this.fuel = 300;
         this.barrelAngle = 0;
         this.velocity = 0;
         this.isMovingLeft = false;
@@ -31,14 +34,26 @@ public class Tank {
     }
     
     // Movement methods
-    public void moveLeft() { isMovingLeft = true; }
-    public void moveRight() { isMovingRight = true; }
+    public void moveLeft() { 
+        if (fuel > 0) {
+            isMovingLeft = true; 
+        }
+
+    }
+    public void moveRight() { 
+        if (fuel > 0) {
+            isMovingRight = true; 
+        }
+    }
     public void stopLeft() { isMovingLeft = false; }
     public void stopRight() { isMovingRight = false; }
+
+    public void consumeFuel() { fuel--; }
     
     // Getters and setters
     public double getX() { return x; }
     public double getY() { return y; }
+    public int getFuel() { return fuel; }
     public double getBarrelAngle() { return barrelAngle; }
     public double getTerrainAngle() { return terrainAngle; }
     public double getVelocity() { return velocity; }
