@@ -9,6 +9,7 @@ import com.tankwars.ui.components.TerrainView;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -52,26 +53,31 @@ public class GameManager {
     private final int player2MaxFuel;
     private final VBox player1HPBox;
     private final VBox player2HPBox;
-    private final Rectangle player1HP;
-    private final Rectangle player2HP;
+    private final Rectangle player1HPTank;
+    private final Rectangle player2HPTank;
     private final Label player1HPText;
     private final Label player2HPText;
     private final int player1MaxHP;
     private final int player2MaxHP;
+    private final int[] player1proj;
+    private final int[] player2proj;
 
 
     
-    public GameManager(Scene gameScene) {
+    public GameManager(Scene gameScene, int player1HP, int player2HP, 
+    int player1Fuel, int player2Fuel, int[] player1proj, int[] player2proj ) {
         StackPane root = (StackPane) gameScene.getRoot();
         root.setPrefSize(800, 600); // Example size
         root.prefWidthProperty().bind(gameScene.widthProperty());
         root.prefHeightProperty().bind(gameScene.heightProperty());
         terrain = new Terrain(800);
         physics = new PhysicsEngine();
+        this.player1proj = player1proj;
+        this.player2proj = player2proj;
         // Place tanks at opposite ends of the terrain
         double[] heights = terrain.getHeights();
-        player1 = new Tank(100, heights[100] - 20, "blue");
-        player2 = new Tank(700, heights[700] - 20, "red");
+        player1 = new Tank(100, heights[100] - 20, "blue", player1HP, player1Fuel, player1proj);
+        player2 = new Tank(700, heights[700] - 20, "red", player2HP, player2Fuel, player2proj);
         player1MaxFuel = player1.getFuel();
         player2MaxFuel = player2.getFuel();
         player1MaxHP = player1.gethp();
@@ -88,7 +94,7 @@ public class GameManager {
         player1FuelBox.setAlignment(Pos.BOTTOM_LEFT); // Align contents to the bottom-left
         StackPane.setAlignment(player1FuelBox, Pos.BOTTOM_LEFT);
         StackPane.setMargin(player1FuelBox, new Insets(10, 0, 50, 60));
-        player1HP = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Player 1 fuel tank
+        player1HPTank = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Player 1 fuel tank
         player1HPText = new Label(String.valueOf(player1.gethp()));
         player1HPText.setStyle("-fx-text-fill: blue;");
         player1HPText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
@@ -96,7 +102,7 @@ public class GameManager {
         player1HPLabel.setStyle("-fx-text-fill: blue;");
         player1HPLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
 
-        player1HPBox = new VBox(5, player1HPLabel, player1HP, player1HPText); // Add label, tank, and text
+        player1HPBox = new VBox(5, player1HPLabel, player1HPTank, player1HPText); // Add label, tank, and text
         player1HPBox.setAlignment(Pos.BOTTOM_LEFT); // Align contents to the bottom-left
         StackPane.setAlignment(player1HPBox, Pos.BOTTOM_LEFT);
         StackPane.setMargin(player1HPBox, new Insets(10, 0, 50, 10));
@@ -112,14 +118,14 @@ public class GameManager {
         player2FuelBox.setAlignment(Pos.BOTTOM_RIGHT);
         StackPane.setAlignment(player2FuelBox, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(player2FuelBox, new Insets(10, 60, 50, 0));
-        player2HP = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Start full
+        player2HPTank = new Rectangle(40, 100, javafx.scene.paint.Color.RED); // Start full
         player2HPText = new Label(String.valueOf(player2.gethp()));
         player2HPText.setStyle("-fx-text-fill:rgb(148, 5, 5);");
         player2HPText.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 16));
         Label player2HPLabel = new Label("P2 HP");
         player2HPLabel.setStyle("-fx-text-fill: rgb(148, 5, 5);");
         player2HPLabel.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 14));
-        player2HPBox = new VBox(5, player2HPLabel, player2HP, player2HPText);
+        player2HPBox = new VBox(5, player2HPLabel, player2HPTank, player2HPText);
         player2HPBox.setAlignment(Pos.BOTTOM_RIGHT);
         StackPane.setAlignment(player2HPBox, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(player2HPBox, new Insets(10, 10, 50, 0));
@@ -162,7 +168,7 @@ public class GameManager {
                 "-fx-padding: 10;"
             )
         );
-        fireButton.setOnAction(e -> manuallyEndTurn());
+        fireButton.setOnAction(e -> fire());
         StackPane.setAlignment(fireButton, Pos.BOTTOM_CENTER);
         projectileSelector = new ComboBox<Projectile>();
 
@@ -186,10 +192,39 @@ public class GameManager {
                     setText(null);
                     setGraphic(null);
                 } else {
+                    String itemName = item.getName();
                     setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
-                    setText(item.getName());
-                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true)); // Set image size
-                    setGraphic(imageView); // Add image to the cell
+                    if(player1Turn){
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player1proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player1proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player1proj[2]);
+                        }
+                    }
+                    else{
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player2proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player2proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player2proj[2]);
+                        }
+
+                    }
+                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
+                    setGraphic(imageView);
                 }
             }
         });
@@ -205,14 +240,43 @@ public class GameManager {
                     setText(null);
                     setGraphic(null);
                 } else {
+                    String itemName = item.getName();
                     setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
-                    setText(item.getName());
+                    if(player1Turn){
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player1proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player1proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player1proj[2]);
+                        }
+                    }
+                    else{
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player2proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player2proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player2proj[2]);
+                        }
+
+                    }
                     imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
                     setGraphic(imageView);
                 }
             }
         });    
-        projectileSelector.setPrefWidth(150);
+        projectileSelector.setPrefWidth(175);
         StackPane.setAlignment(projectileSelector, Pos.BOTTOM_CENTER);
         StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0)); // 10px margin from the top
         root.getChildren().addAll( terrainView,player1FuelBox, player2FuelBox, 
@@ -241,7 +305,6 @@ public class GameManager {
             }
             if (e.getCode() == KeyCode.SPACE){
                 fire();
-                endTurn();
             }
         });
         
@@ -315,8 +378,53 @@ public class GameManager {
         
     }
     private void fire(){
-        projectileSelector.getValue();
-        endTurn();
+        String projFired = projectileSelector.getValue().getName();
+        if(player1Turn){
+            if(projFired.equals("Big Bomb")){
+                if(player1proj[0] > 0){
+                    player1proj[0] -=1;
+                    endTurn();
+                }
+            }
+            else if(projFired.equals("Cluster Bomb")){
+                if(player1proj[1] > 1){
+                    player1proj[1] -= 1;
+                    endTurn();
+                }
+            }
+            else if(projFired.equals("Sniper")){
+                if(player1proj[2] > 1){
+                    player1proj[2] -= 1;
+                    endTurn();
+                }
+            }
+            else{
+                endTurn();           
+            }
+        }
+        else{
+            if(projFired.equals("Big Bomb")){
+                if(player2proj[0] > 0){
+                    player2proj[0] -=1;
+                    endTurn();
+                }
+            }
+            else if(projFired.equals("Cluster Bomb")){
+                if(player2proj[1] > 1){
+                    player2proj[1] -= 1;
+                    endTurn();
+                }
+            }
+            else if(projFired.equals("Sniper")){
+                if(player2proj[2] > 1){
+                    player2proj[2] -= 1;
+                    endTurn();
+                }
+            }
+            else{
+                endTurn();           
+            }
+        }
     }
     
     private void setupTurnTimer() {
@@ -349,6 +457,100 @@ public class GameManager {
     }
     private void endTurn() {
         turnTimer.stop(); // Stop the timer
+        projectileSelector.setCellFactory(param -> new ListCell<>() {
+            private final ImageView imageView = new ImageView();
+
+            @Override
+            protected void updateItem(Projectile item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    String itemName = item.getName();
+                    setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
+                    if(player1Turn){
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player1proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player1proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player1proj[2]);
+                        }
+                    }
+                    else{
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player2proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player2proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player2proj[2]);
+                        }
+
+                    }
+                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
+                    setGraphic(imageView);
+                }
+            }
+        });
+
+        // Also set the appearance of the selected item in the dropdown button
+        projectileSelector.setButtonCell(new ListCell<>() {
+            private final ImageView imageView = new ImageView();
+
+            @Override
+            protected void updateItem(Projectile item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    String itemName = item.getName();
+                    setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 12));
+                    if(player1Turn){
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player1proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player1proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player1proj[2]);
+                        }
+                    }
+                    else{
+                        if(itemName.equals("Basic")){
+                            setText(itemName + " - \u221E");
+                        }
+                        else if(itemName.equals("Big Bomb")){
+                            setText(itemName + " - " + player2proj[0]);
+                        }
+                        else if(itemName.equals("Cluster Bomb")){
+                            setText(itemName + " - " + player2proj[1]);
+                        }
+                        else {
+                            setText(itemName + " - " + player2proj[2]);
+                        }
+
+                    }
+                    imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
+                    setGraphic(imageView);
+                }
+            }
+        });    
         player1Turn = !player1Turn; // Switch turns
         startTurn(); // Start the next turn
     }

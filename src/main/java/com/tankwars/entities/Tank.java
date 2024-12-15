@@ -18,15 +18,17 @@ public class Tank {
     private final Image bodySprite;
     private final Image barrelSprite;
     private int fuel; // Fuel for the tank
-    public int hp;
+    private int hp;
+    private int[] proj;
 
     
-    public Tank(double x, double y, String color) {
+    public Tank(double x, double y, String color, int hp, int fuel, int[] proj) {
         this.x = x;
         this.y = y;
         this.terrainAngle = 0;
-        this.fuel = 300;
-        this.hp = 100;
+        this.fuel = fuel;
+        this.hp = hp;
+        this.proj = proj;
         this.barrelAngle = 0;
         this.velocity = 0;
         this.isMovingLeft = false;
