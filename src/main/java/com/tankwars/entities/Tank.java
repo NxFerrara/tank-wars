@@ -18,7 +18,9 @@ public class Tank {
     private final Image bodySprite;
     private final Image barrelSprite;
     private int fuel; // Fuel for the tank
+    private int maxFuel;
     private int hp;
+    private int maxHP;
     private int[] proj;
 
     
@@ -27,7 +29,9 @@ public class Tank {
         this.y = y;
         this.terrainAngle = 0;
         this.fuel = fuel;
+        this.maxFuel = fuel;
         this.hp = hp;
+        this.maxHP = hp;
         this.proj = proj;
         this.barrelAngle = 0;
         this.velocity = 0;
@@ -79,7 +83,12 @@ public class Tank {
         this.x = x;
         this.y = y;
     }
-    
+    public void refuel(){
+        this.fuel = maxFuel;
+    }
+    public void addHealth(int hp){
+        this.hp += hp;
+    }
     public void setBarrelAngle(double angle) { this.barrelAngle = angle; }
     public void setTerrainAngle(double angleRadians) { 
         this.terrainAngle = angleRadians;  // Store in radians

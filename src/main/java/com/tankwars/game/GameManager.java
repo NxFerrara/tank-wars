@@ -1,5 +1,8 @@
 package com.tankwars.game;
 
+import java.util.Random;
+
+import com.tankwars.entities.PowerUp;
 import com.tankwars.entities.Projectile;
 import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
@@ -28,6 +31,7 @@ import javafx.scene.text.Font;
 
 
 public class GameManager {
+    private final PowerUp powerUp;
     private final Terrain terrain;
     private final Tank player1;
     private final Tank player2;
@@ -76,6 +80,10 @@ public class GameManager {
         this.player2proj = player2proj;
         // Place tanks at opposite ends of the terrain
         double[] heights = terrain.getHeights();
+        String[] types = {"fuel", "health", "ammo"};
+        String randomType = types[new Random().nextInt(types.length)];
+        double terrainHeight = terrain.getHeights()[terrain.getWidth() / 2];
+        powerUp = new PowerUp(terrain.getWidth() / 2, terrainHeight - 20, 40, randomType,"file:src/main/resources/images/powerup.png"); // Example power-up
         player1 = new Tank(100, heights[100] - 20, "blue", player1HP, player1Fuel, player1proj);
         player2 = new Tank(700, heights[700] - 20, "red", player2HP, player2Fuel, player2proj);
         player1MaxFuel = player1.getFuel();
@@ -558,6 +566,40 @@ public class GameManager {
         // Apply terrain physics
         physics.update(player1, terrain);
         physics.update(player2, terrain);
+        checkPowerUpCollision();
+    }
+    private void checkPowerUpCollision() {
+        if (powerUp != null && powerUp.isActive()) {
+            if (powerUp.checkCollision(player1.getX(), player1.getY(), player1.getBodySprite().getWidth(), player1.getBodySprite().getHeight())) {
+                applyPowerUpEffect(player1, powerUp);
+                powerUp.collect();
+            } else if (powerUp.checkCollision(player2.getX(), player2.getY(), player2.getBodySprite().getWidth(), player2.getBodySprite().getHeight())) {
+                applyPowerUpEffect(player2, powerUp);
+                powerUp.collect();
+            }
+        }
+    }
+    private void applyPowerUpEffect(Tank tank, PowerUp powerUp) {
+        switch (powerUp.getType()) {
+            case "fuel":
+                tank.refuel(); // Example: Add 50 units of fuel
+                break;
+            case "health":
+                tank.addHealth(25); // Example: Add 25 health points
+                break;
+            case "ammo":
+                int randomNum = new Random().nextInt(3);
+                if(player1Turn){
+                    player1proj[randomNum] += 3;
+                }
+                else{
+                    player2proj[randomNum] += 3;
+                }
+                
+                break;
+            default:
+                break;
+        }
     }
 
 
@@ -565,6 +607,7 @@ public class GameManager {
     public Terrain getTerrain() { return terrain; }
     public Tank getPlayer1() { return player1; }
     public Tank getPlayer2() { return player2; }
+    public PowerUp getPowerup(){ return powerUp;}
     public void manuallyEndTurn() {
         endTurn(); // Allows the user to manually end the turn
     }

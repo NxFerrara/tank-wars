@@ -1,8 +1,10 @@
 package com.tankwars.ui.components;
 
+
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import com.tankwars.entities.PowerUp;
 import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
 import com.tankwars.game.GameManager;
@@ -83,6 +85,8 @@ public class TerrainView extends Canvas {
         
         drawTank(gc, player1);
         drawTank(gc, player2);
+        PowerUp powerUp = gameManager.getPowerup();
+        powerUp.render(gc);
     }
     
     private void drawTank(GraphicsContext gc, Tank tank) {
