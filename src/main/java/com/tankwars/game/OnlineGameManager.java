@@ -189,7 +189,6 @@ public class OnlineGameManager extends GameManager{
         projectileSelector.getItems().addAll(
                 new Projectile("Basic", "file:src/main/resources/images/basic.png"),
                 new Projectile("Big Bomb", "file:src/main/resources/images/bigbomb.png"),
-                new Projectile("Cluster Bomb", "file:src/main/resources/images/clusterbomb.png"),
                 new Projectile("Sniper", "file:src/main/resources/images/sniper.png")
         );
         projectileSelector.setValue(projectileSelector.getItems().get(0)); // Default to the first item
@@ -214,11 +213,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -228,11 +224,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -262,11 +255,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -276,11 +266,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -450,15 +437,9 @@ public class OnlineGameManager extends GameManager{
                     endTurn();
                 }
             }
-            else if(projFired.equals("Cluster Bomb")){
+            else if(projFired.equals("Sniper")){
                 if(player1proj[1] > 1){
                     player1proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player1proj[2] > 1){
-                    player1proj[2] -= 1;
                     endTurn();
                 }
             }
@@ -473,15 +454,9 @@ public class OnlineGameManager extends GameManager{
                     endTurn();
                 }
             }
-            else if(projFired.equals("Cluster Bomb")){
+            else if(projFired.equals("Sniper")){
                 if(player2proj[1] > 1){
                     player2proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player2proj[2] > 1){
-                    player2proj[2] -= 1;
                     endTurn();
                 }
             }
@@ -539,11 +514,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -553,11 +525,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -587,11 +556,8 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -601,13 +567,9 @@ public class OnlineGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
+                        else {
                             setText(itemName + " - " + player2proj[1]);
                         }
-                        else {
-                            setText(itemName + " - " + player2proj[2]);
-                        }
-
                     }
                     imageView.setImage(new Image(item.getImagePath(), 24, 24, true, true));
                     setGraphic(imageView);
@@ -675,7 +637,7 @@ public class OnlineGameManager extends GameManager{
                 tank.addHealth(25); // Example: Add 25 health points
                 break;
             case "ammo":
-                int randomNum = new Random().nextInt(3);
+                int randomNum = new Random().nextInt(2);
                 if(isPlayer1){
                     player1proj[randomNum] += 3;
                 }

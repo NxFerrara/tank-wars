@@ -29,8 +29,8 @@ public class MenuScene extends Scene {
     private boolean isPlayer1 = true; // Track whose turn it is
     private int player1Money = 100, player1Fuel = 300, player1HP = 100;
     private int player2Money = 100, player2Fuel = 300, player2HP = 100;
-    private int[] player1proj = {0,0,0};
-    private int[] player2proj = {0,0,0};
+    private int[] player1proj = {0,0};
+    private int[] player2proj = {0,0};
     private Label titleLabel = new Label("Player 1: Upgrade Your Tank!");
     private Label moneyLabel = new Label("Money: $100");
     private VBox upgradeBox;
@@ -352,16 +352,14 @@ public class MenuScene extends Scene {
                     player1Fuel + ":" +
                     player1HP + ":" +
                     player1proj[0] + ":" +
-                    player1proj[1] + ":" +
-                    player1proj[2];
+                    player1proj[1];
         } else {
             return "END_TURN:" +
                     player2Money + ":" +
                     player2Fuel + ":" +
                     player2HP + ":" +
                     player2proj[0] + ":" +
-                    player2proj[1] + ":" +
-                    player2proj[2];
+                    player2proj[1];
         }
     }
 
@@ -385,7 +383,6 @@ public class MenuScene extends Scene {
                 player2HP = Integer.parseInt(data[3]);
                 player2proj[0] = Integer.parseInt(data[4]);
                 player2proj[1] = Integer.parseInt(data[5]);
-                player2proj[2] = Integer.parseInt(data[6]);
             } else {
                 isPlayer1 = false;
                 player1Money = Integer.parseInt(data[1]);
@@ -393,7 +390,6 @@ public class MenuScene extends Scene {
                 player1HP = Integer.parseInt(data[3]);
                 player1proj[0] = Integer.parseInt(data[4]);
                 player1proj[1] = Integer.parseInt(data[5]);
-                player1proj[2] = Integer.parseInt(data[6]);
                 toggleUpgradeBox(true); // Show the upgrade box for Player 2
             }
             updateMoneyLabel();
@@ -468,7 +464,7 @@ public class MenuScene extends Scene {
         + "-fx-padding: 10;"
         + "-fx-font-weight: bold";
         ComboBox<String> projectileSelector = new ComboBox<>();
-        projectileSelector.getItems().addAll( "Big Bomb - $20", "Cluster Bomb - $20", "Sniper - $20");
+        projectileSelector.getItems().addAll( "Big Bomb - $20", "Sniper - $20");
         projectileSelector.setValue("Big Bomb - $20");
         projectileSelector.setCellFactory(listView -> new ListCell<>() {
             @Override
@@ -595,8 +591,7 @@ public class MenuScene extends Scene {
             if (player1Money >= cost) {
                 player1Money -= cost;
                 if (type.substring(0,3).equals("Big")) player1proj[0] += amount;
-                if (type.substring(0,3).equals("Clu")) player1proj[1] += amount;
-                if (type.substring(0,3).equals("Sni")) player1proj[2] += amount;
+                if (type.substring(0,3).equals("Sni")) player1proj[1] += amount;
                 System.out.println("Player 1 bought: " + amount + " " + projType+ ", Cost: $" + cost);
             } else {
                 System.out.println("Player 1 doesn't have enough money.");
@@ -605,8 +600,7 @@ public class MenuScene extends Scene {
             if (player2Money >= cost) {
                 player2Money -= cost;
                 if (type.substring(0,3).equals("Big")) player2proj[0] += amount;
-                if (type.substring(0,3).equals("Clu")) player2proj[1] += amount;
-                if (type.substring(0,3).equals("Sni")) player2proj[2] += amount;
+                if (type.substring(0,3).equals("Sni")) player2proj[1] += amount;
                 System.out.println("Player 2 bought: " + amount + " " + projType+ ", Cost: $" + cost);
             } else {
                 System.out.println("Player 2 doesn't have enough money.");
@@ -671,10 +665,10 @@ public class MenuScene extends Scene {
             \u2022 Purchase fuel or health to make your tank stronger.
             \u2022 Purchase special ammunition to pack a heavier punch:
                 - Big Bomb: Double explosion radius compared to basic ammo.
-                - Cluster Bomb: Explodes into basic ammo for wider area of impact.
                 - Sniper: Direct hits do triple damage but no explosion radius.
             2. During your turn:
             \u2022 Use the A and D keys to move left or right.
+            \u2022 Use the Q and E keys to adjust the angle of your shot.
             \u2022 Press Space to fire your selected projectile.
             3. Each player has limited fuel and ammo:
             \u2022 Plan your moves carefully to conserve resources.
@@ -683,6 +677,7 @@ public class MenuScene extends Scene {
             \u2022 Collect it to refuel, gain health, or gain special ammo.
             6. Turns are timed (120 seconds each). Your turn will end when the timer hits 0.
             7. The game ends when one player runs out of health.
+            8. The closer a tank is to the center of an explosion, the more damagge it takes.
 
             Good luck, and may the best player win!
         """;
