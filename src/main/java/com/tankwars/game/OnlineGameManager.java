@@ -9,6 +9,7 @@ import com.tankwars.entities.PowerUp;
 import com.tankwars.entities.Projectile;
 import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
+import com.tankwars.ui.MenuScene;
 import com.tankwars.ui.components.TerrainView;
 import com.tankwars.network.GameClient;
 import com.tankwars.network.GameHost;
@@ -32,6 +33,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
 
 public class OnlineGameManager extends GameManager{
@@ -67,10 +69,11 @@ public class OnlineGameManager extends GameManager{
     private boolean isPlayer1 = false;
     private FiredProjectile activeProjectile;
     private final Label notificationLabel;
+    private final Button backButton;
 
 
     
-    public OnlineGameManager(Scene gameScene, int player1HP, int player2HP, 
+    public OnlineGameManager(Stage primaryStage, Scene gameScene, int player1HP, int player2HP, 
     int player1Fuel, int player2Fuel, int[] player1proj, 
     int[] player2proj, Object connection) {
         super(gameScene);
@@ -188,6 +191,41 @@ public class OnlineGameManager extends GameManager{
         );
         fireButton.setOnAction(e -> fire());
         StackPane.setAlignment(fireButton, Pos.BOTTOM_CENTER);
+         backButton = new Button("Back to Menu");
+        backButton.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 20));
+        backButton.setStyle(
+            "-fx-text-fill: white;" +
+            "-fx-background-color: #4caf50;" + 
+            "-fx-border-radius: 5px;" +
+            "-fx-padding: 10;" 
+        );
+
+        backButton.setOnMouseEntered(e -> 
+            backButton.setStyle(
+                "-fx-text-fill: white;" +
+                "-fx-background-color: #45a049;" + 
+                "-fx-border-radius: 5px;" +
+                "-fx-padding: 10;" 
+            )
+        );
+        backButton.setOnMouseExited(e -> 
+            backButton.setStyle(
+                "-fx-text-fill: white;" +
+                "-fx-background-color: #4caf50;" + 
+                "-fx-border-radius: 5px;" +
+                "-fx-padding: 10;"
+            )
+        );
+        backButton.setVisible(false);
+        backButton.setDisable(true);
+        backButton.setOnAction( e -> {
+            MenuScene menuManager = new MenuScene(null);
+        // Set the initial scene to the menu
+            Scene menuScene = menuManager.createMenuScene(primaryStage);
+            primaryStage.setTitle("Tank Wars");
+            primaryStage.setScene(menuScene);
+        });
+        StackPane.setAlignment(backButton, Pos.CENTER);
         projectileSelector = new ComboBox<Projectile>();
 
         // Add projectile types with images
@@ -401,6 +439,8 @@ public class OnlineGameManager extends GameManager{
         gameLoop.stop();
         showNotification(message, 100); 
         fireButton.setDisable(true);
+        backButton.setVisible(true);
+        backButton.setDisable(false);
     }
     }
 
@@ -672,6 +712,8 @@ public class OnlineGameManager extends GameManager{
                 if (connection instanceof GameHost) {
                     ((GameHost) connection).sendMessage("Player 2 Wins!"); 
                 fireButton.setDisable(true);
+                backButton.setVisible(true);
+                backButton.setDisable(false);
                 return;
             } else if (player2.gethp() <= 0) {
                 gameLoop.stop();
@@ -679,6 +721,8 @@ public class OnlineGameManager extends GameManager{
                 if (connection instanceof GameClient) {
                     ((GameClient) connection).sendMessage("Player 1 Wins!"); 
                 fireButton.setDisable(true);
+                backButton.setVisible(true);
+                backButton.setDisable(false);
                 return;
             }
             }

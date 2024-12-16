@@ -26,8 +26,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
 import com.tankwars.entities.FiredProjectile;
 import com.tankwars.entities.Explosion;
+import com.tankwars.ui.MenuScene;
 
 
 public class LocalGameManager extends GameManager{
@@ -36,6 +39,7 @@ public class LocalGameManager extends GameManager{
     private boolean rightPressed;
     private int timeRemaining = 120; // 120 seconds per turn
     private final Button fireButton;
+    private final Button backButton;
     private final ComboBox<Projectile> projectileSelector;
     private final Label timerLabel;
     private final Label turnBanner; // Label to display whose turn it is
@@ -63,7 +67,7 @@ public class LocalGameManager extends GameManager{
 
 
     
-    public LocalGameManager(Scene gameScene, int player1HP, int player2HP, 
+    public LocalGameManager(Stage primaryStage, Scene gameScene, int player1HP, int player2HP, 
     int player1Fuel, int player2Fuel, int[] player1proj, int[] player2proj ) {
         super(gameScene);
         StackPane root = (StackPane) gameScene.getRoot();
@@ -146,6 +150,41 @@ public class LocalGameManager extends GameManager{
         StackPane.setMargin(turnBanner, new Insets(5, 0, 0, 15)); // 10px margin from the top
 
         terrainView = new TerrainView(this);
+        backButton = new Button("Back to Menu");
+        backButton.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 20));
+        backButton.setStyle(
+            "-fx-text-fill: white;" +
+            "-fx-background-color: #4caf50;" + 
+            "-fx-border-radius: 5px;" +
+            "-fx-padding: 10;" 
+        );
+
+        backButton.setOnMouseEntered(e -> 
+            backButton.setStyle(
+                "-fx-text-fill: white;" +
+                "-fx-background-color: #45a049;" + 
+                "-fx-border-radius: 5px;" +
+                "-fx-padding: 10;" 
+            )
+        );
+        backButton.setOnMouseExited(e -> 
+            backButton.setStyle(
+                "-fx-text-fill: white;" +
+                "-fx-background-color: #4caf50;" + 
+                "-fx-border-radius: 5px;" +
+                "-fx-padding: 10;"
+            )
+        );
+        backButton.setVisible(false);
+        backButton.setDisable(true);
+        backButton.setOnAction( e -> {
+            MenuScene menuManager = new MenuScene(null);
+        // Set the initial scene to the menu
+            Scene menuScene = menuManager.createMenuScene(primaryStage);
+            primaryStage.setTitle("Tank Wars");
+            primaryStage.setScene(menuScene);
+        });
+        StackPane.setAlignment(backButton, Pos.CENTER);
         fireButton = new Button("Fire");
         fireButton.setFont(Font.loadFont("file:src/main/resources/fonts/Baloo-Regular.ttf", 20));
         fireButton.setStyle(
@@ -591,11 +630,15 @@ public class LocalGameManager extends GameManager{
             gameLoop.stop();
             showNotification("Player 2 Wins!", 100);
             fireButton.setDisable(true);
+            backButton.setVisible(true);
+            backButton.setDisable(false);
             return;
         } else if (player2.gethp() <= 0) {
             gameLoop.stop();
             showNotification("Player 1 Wins!", 100);
             fireButton.setDisable(true);
+            backButton.setVisible(true);
+            backButton.setDisable(false);
             return;
         }
     }
