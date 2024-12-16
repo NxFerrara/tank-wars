@@ -4,9 +4,9 @@
 Tank Wars is a Java-based two-player online multiplayer game featuring physics-based tank combat on a destructible 2D map. Players control tanks and must strategically reduce their opponent's hit points to zero.
 
 ## Features 
-- **Online Multiplayer:** Turn-based gameplay with timer system
-- **Physics Combat:** Control projectile trajectory and velocity
-- **Weapon System:** Multiple ammunition types (explosive, boring, cluster rounds)
+- **Online and Local Multiplayer:** Turn-based gameplay with timer system
+- **Physics Combat:** Control projectile trajectory 
+- **Weapon System:** Multiple ammunition types (explosive, sniper rounds)
 - **Power-ups:** Collectible items affecting movement, weapons, and health
 - **Tank Movement:** Tactical repositioning across the battlefield
 
@@ -39,6 +39,7 @@ Tank Wars is a Java-based two-player online multiplayer game featuring physics-b
 3. Run using either:
    - Maven: `mvn javafx:run`
    - IDE: Use provided launch configuration (You can just run the Main.java file with the "Run" button)
+4. To test multiplayer, open two instances of the game and connect by typing localhost in the join game field.
 
 ### Troubleshooting
 - Ensure Maven is properly installed
