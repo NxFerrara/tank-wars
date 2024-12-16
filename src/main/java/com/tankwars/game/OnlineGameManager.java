@@ -336,7 +336,7 @@ public class OnlineGameManager extends GameManager{
         StackPane.setAlignment(notificationLabel, Pos.TOP_CENTER);
         StackPane.setMargin(notificationLabel, new Insets(50, 0, 0, 0));
         root.getChildren().addAll( terrainView,player1FuelBox, player2FuelBox, 
-            player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector);
+            player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector, notificationLabel, backButton);
         setupInput(gameScene);
         setupTurnTimer();
         gameLoop = new AnimationTimer() {
