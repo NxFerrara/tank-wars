@@ -89,6 +89,12 @@ public class Tank {
     public void addHealth(int hp){
         this.hp += hp;
     }
+    public void setFuel(int fuel){
+        this.fuel = fuel;
+    }
+    public void sethp(int hp){
+        this.hp = hp;
+    }
     public void setBarrelAngle(double angle) { this.barrelAngle = angle; }
     public void setTerrainAngle(double angleRadians) { 
         this.terrainAngle = angleRadians;  // Store in radians

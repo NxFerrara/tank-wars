@@ -13,6 +13,7 @@ import com.tankwars.network.GameHost;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -306,129 +307,82 @@ public class OnlineGameManager extends GameManager{
     }
     
     public void setupInput(Scene scene) {
-        if (myTurn){
-            scene.setOnKeyPressed(e -> {
-                String action = null;
-                if (isPlayer1){
-                    if (e.getCode() == KeyCode.A) {
-                        action = "PLAYER1_MOVE_LEFT";
-                        leftPressed = true;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.D) {
-                        action = "PLAYER1_MOVE_RIGHT";
-                        rightPressed = true;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.SPACE) {
-                        action = "PLAYER1_FIRE";
-                        fire();
-                    }
-                } else {
-                    if (e.getCode() == KeyCode.A) {
-                        action = "PLAYER2_MOVE_LEFT";
-                        leftPressed = true;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.D) {
-                        action = "PLAYER2_MOVE_RIGHT";
-                        rightPressed = true;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.SPACE) {
-                        action = "PLAYER2_FIRE";
-                        fire();
-                    }
-                }
-                if (action != null) {
-                    if (connection instanceof GameHost){
-                        ((GameHost)connection).sendMessage(action);
-                        System.out.println("Sent Message");
-                    }
-                    if (connection instanceof GameClient){
-                        ((GameClient)connection).sendMessage(action);
-                        System.out.println("Sent Message");
-                    }
-                }
-            });
-            
-            scene.setOnKeyReleased(e -> {
-                String action = null;
-                if (isPlayer1){
-                    if (e.getCode() == KeyCode.A) {
-                        action = "PLAYER1_STOP_MOVE_LEFT";
-                        leftPressed = false;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.D) {
-                        action = "PLAYER1_STOP_MOVE_RIGHT";
-                        rightPressed = false;
-                        updateTankMovement();
-                    } 
-                } else {
-                    if (e.getCode() == KeyCode.A) {
-                        action = "PLAYER1_STOP_MOVE_LEFT";
-                        leftPressed = false;
-                        updateTankMovement();
-                    }
-                    if (e.getCode() == KeyCode.D) {
-                        action = "PLAYER1_STOP_MOVE_RIGHT";
-                        rightPressed = false;
-                        updateTankMovement();
-                    } 
-                }
-                if (action != null) {
-                    if (connection instanceof GameHost){
-                        ((GameHost)connection).sendMessage(action);
-                    }
-                    if (connection instanceof GameClient){
-                        ((GameClient)connection).sendMessage(action);
-                    }
-                }
-            });
-        }
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.A) {
+                leftPressed = true;
+                updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.D) {
+                rightPressed = true;
+                updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.SPACE){
+                fire();
+            }
+        });
         
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.A) {
+                leftPressed = false;
+                updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.D) {
+                rightPressed = false;
+                updateTankMovement();
+            }
+        });
     }
     private void processMessage(String message) {
-        System.out.println(message);
-        if (message.startsWith("PLAYER1_MOVE_LEFT")) {
-            leftPressed = true;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER1_STOP_MOVE_LEFT")) {
-            leftPressed = false;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER1_MOVE_RIGHT")) {
-            rightPressed = true;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER1_STOP_MOVE_RIGHT")) {
-            rightPressed = false;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER2_MOVE_LEFT")){
-            leftPressed = true;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER2_STOP_MOVE_LEFT")){
-            leftPressed = false;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER2_MOVE_RIGHT")){
-            rightPressed = true;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER2_STOP_MOVE_RIGHT")){
-            rightPressed = false;
-            updateTankMovement();
-        }
-        if (message.startsWith("PLAYER1_FIRE")){
-            endTurn();
-        }
-        if (message.startsWith("PLAYER2_FIRE")){
-            endTurn();
-        }
+    if (message.startsWith("END_TURN:")) {
+        String[] parts = message.split(":");
+        double opponentX = Double.parseDouble(parts[1]);
+        double opponentY = Double.parseDouble(parts[2]);
+        int opponentFuel = Integer.parseInt(parts[3]);
+        int myHP = Integer.parseInt(parts[4]);
+        String isActive = parts[5];
+
+        // Update variables on the opponent's turn
+        Platform.runLater(() -> {
+            if (!isPlayer1) {
+                player1.setPosition(opponentX, opponentY);
+                player1.setFuel(opponentFuel);
+                player2.sethp(myHP);
+                renderTankUpdates();
+                if (isActive.equals("false")){
+                    powerUp.collect();
+                }
+            }
+            else{
+                player2.setPosition(opponentX, opponentY);
+                player2.setFuel(opponentFuel);
+                player1.sethp(myHP);
+                renderTankUpdates();
+                if (isActive.equals("false")){
+                    powerUp.collect();
+                }
+            }
+        });
+
+        if (!myTurn) {
+            myTurn = true;
+            startTurn();
+        }}
+    }
+
+    private void renderTankUpdates() {
+        // Update Player 1 visuals
+        player1FuelTank.setHeight(((double) player1.getFuel() / player1MaxFuel) * 100);
+        player1FuelText.setText(String.valueOf(player1.getFuel()));
+        // Update Player 2 visuals
+        player2FuelTank.setHeight(((double) player2.getFuel() / player2MaxFuel) * 100);
+        player2FuelText.setText(String.valueOf(player2.getFuel()));
+        player1HPTank.setHeight(((double) player1.gethp() / player1MaxHP) * 100);
+        player1HPText.setText(String.valueOf(player1.gethp()));
+        // Update Player 2 visuals
+        player2HPTank.setHeight(((double) player2.gethp() / player2MaxHP) * 100);
+        player2HPText.setText(String.valueOf(player2.gethp()));
+        physics.update(player1, terrain);
+        physics.update(player2, terrain);
     }
     private void updateTankMovement() {
         player1FuelTank.setHeight(((double)player1.getFuel()/player1MaxFuel)*100);
@@ -436,7 +390,7 @@ public class OnlineGameManager extends GameManager{
     
         player2FuelTank.setHeight(((double)player2.getFuel()/player2MaxFuel)*100);
         player2FuelText.setText(String.valueOf(player2.getFuel())); // Update fuel number
-        if ((isPlayer1 && myTurn) || (!isPlayer1 && !myTurn)){
+        if (isPlayer1){
             if (player1.getFuel() > 0) { // Check Player 1's fuel
                 if (leftPressed && rightPressed) {
                     // Both keys pressed - stop movement
@@ -460,8 +414,7 @@ public class OnlineGameManager extends GameManager{
                 player1.stopLeft();
                 player1.stopRight();
             }
-        } 
-        else if((!isPlayer1 && myTurn) || (isPlayer1 && !myTurn)){
+        } else {
             if (player2.getFuel() > 0) { // Check Player 2's fuel
                 if (leftPressed && rightPressed) {
                     // Both keys pressed - stop movement
@@ -486,9 +439,7 @@ public class OnlineGameManager extends GameManager{
                 player2.stopRight();
             }
         }
-        physics.update(player1, terrain);
-        physics.update(player2, terrain);
-        checkPowerUpCollision();
+        
     }
     private void fire(){
         String projFired = projectileSelector.getValue().getName();
@@ -545,7 +496,6 @@ public class OnlineGameManager extends GameManager{
             new KeyFrame(Duration.seconds(1), e -> {
                 timeRemaining--;
                 timerLabel.setText("Time Remaining: " + timeRemaining + " seconds");
-
                 if (timeRemaining <= 0) {
                     endTurn(); // Automatically end the turn when the timer expires
                 }
@@ -557,25 +507,16 @@ public class OnlineGameManager extends GameManager{
         // Reset timer for the current turn
         timeRemaining = 120;
         timerLabel.setText("Time Remaining: 120 seconds");
-        if (isPlayer1 && myTurn) {
+        if ((isPlayer1 && myTurn) || (!isPlayer1 && !myTurn)) {
             turnBanner.setText("Player 1");
             turnBanner.setStyle( "-fx-text-fill: #0000FF;");
         } 
-        else if(!isPlayer1 && myTurn) {
+        else {
             turnBanner.setText("Player 2");
-            turnBanner.setStyle( "-fx-text-fill: #FF0000;");
-        }
-        else if(isPlayer1 && !myTurn) {
-            turnBanner.setText("Player 2");
-            turnBanner.setStyle( "-fx-text-fill: #FF0000;");
-        }
-        else{
-            turnBanner.setText("Player 1");
-            turnBanner.setStyle( "-fx-text-fill: #0000FF;");
+            turnBanner.setStyle("-fx-text-fill: #FF0000;");
         }
         // Start the turn timer
         turnTimer.play();
-
     }
     private void endTurn() {
         turnTimer.stop(); // Stop the timer
@@ -672,35 +613,44 @@ public class OnlineGameManager extends GameManager{
                     setGraphic(imageView);
                 }
             }
-        });    
+        });
+        String endTurnData = "";
+        if(isPlayer1){
+            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s",
+            player1.getX(), player1.getY(), player1.getFuel(), player2.gethp(), powerUp.isActive());
+        }
+        else{
+            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s",
+            player2.getX(), player2.getY(), player2.getFuel(), player1.gethp(), powerUp.isActive());
+        }
+        if (connection instanceof GameHost) {
+            ((GameHost) connection).sendMessage(endTurnData);
+        } else if (connection instanceof GameClient) {
+            ((GameClient) connection).sendMessage(endTurnData);
+        }    
         myTurn = !myTurn; // Switch turns
-        startTurn(); // Start the next turn
     }
     public void update() {
-        if (!myTurn) {
+        if (myTurn) {
+            // Update physics and check collisions only during the player's turn
+            physics.update(player1, terrain);
+            physics.update(player2, terrain);
+            checkPowerUpCollision();
+        } else {
+            // Listen for opponent's end-turn data
             try {
                 String message = "";
                 if (connection instanceof GameHost) {
-                    GameHost host = (GameHost) connection;
-                    if ((message = host.receiveMessageNonBlocking()) != null) { // Non-blocking call
-                        processMessage(message);
-
-                    }
+                    message = ((GameHost) connection).receiveMessage();
+                } else if (connection instanceof GameClient) {
+                    message = ((GameClient) connection).receiveMessage();
                 }
-                if (connection instanceof GameClient) {
-                    GameClient client = (GameClient) connection;
-                    if ((message = client.receiveMessageNonBlocking()) != null) { // Non-blocking call
-                        processMessage(message);
-                    }
+                if (!message.isEmpty()) {
+                    processMessage(message);
                 }
             } catch (IOException e) {
                 System.err.println("Error receiving message: " + e.getMessage());
             }
-        }
-        if (myTurn) {
-            physics.update(player1, terrain);
-            physics.update(player2, terrain);
-            checkPowerUpCollision();
         }
     }
 
