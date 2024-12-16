@@ -617,11 +617,11 @@ public class MenuScene extends Scene {
                 GameManager gameManager;
     
                 if (online) {
-                    gameManager = new OnlineGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
+                    gameManager = new OnlineGameManager(primaryStage, gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                         player1proj, player2proj, Connection);
                 } else {
                     SoundManager.stopMusic();
-                    gameManager = new LocalGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
+                    gameManager = new LocalGameManager(primaryStage, gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                        player1proj, player2proj);
                 }
                 gameScene.setGameManager(gameManager);
