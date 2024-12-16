@@ -5,6 +5,7 @@ Tank Wars is a Java-based two-player online multiplayer game featuring physics-b
 
 ## Features 
 - **Online and Local Multiplayer:** Turn-based gameplay with timer system
+- **Money System:** Customize your experience by purchasing different upgrades
 - **Physics Combat:** Control projectile trajectory 
 - **Weapon System:** Multiple ammunition types (explosive, sniper rounds)
 - **Power-ups:** Collectible items affecting movement, weapons, and health
