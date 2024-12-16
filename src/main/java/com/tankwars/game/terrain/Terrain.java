@@ -6,10 +6,15 @@ public class Terrain {
     private double[] heights;
     private static final double GROUND_LEVEL = 300; // Default ground level
     
-    public Terrain(int width) {
+    public Terrain(int width, int seed) {
         heights = new double[width];
-        Random random = new Random();
-        
+        Random random;
+        if(seed != 0){
+            random = new Random(seed);
+        }
+        else{
+            random = new Random();
+        }
         // Generate control points for hills
         int numControlPoints = width / 100;
         double[] controlPoints = new double[numControlPoints];

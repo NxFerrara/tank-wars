@@ -22,13 +22,9 @@ public class PhysicsEngine {
         
         // Apply movement forces with acceleration
         if (tank.isMovingLeft()) {
-            tank.setVelocity(tank.getVelocity() - ACCELERATION);
-            if (tank.getVelocity() < -Tank.MAX_SPEED) 
-                tank.setVelocity(-Tank.MAX_SPEED);
+            tank.setVelocity(-Tank.MAX_SPEED);
         } else if (tank.isMovingRight()) {
-            tank.setVelocity(tank.getVelocity() + ACCELERATION);
-            if (tank.getVelocity() > Tank.MAX_SPEED) 
-                tank.setVelocity(Tank.MAX_SPEED);
+            tank.setVelocity(Tank.MAX_SPEED);
         } else {
             tank.setVelocity(0);
         }
