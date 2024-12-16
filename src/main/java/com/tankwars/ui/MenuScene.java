@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -443,7 +444,7 @@ public class MenuScene extends Scene {
         moneyLabel.setStyle(
             "-fx-text-fill: white;" +
             "-fx-font-weight: bold;" +
-            "-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.8), 5, 0.3, 0, 0);" +
+            "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 10, 0.7, 2, 2);" +
             "-fx-padding: 10;"
         );
         // Fuel Upgrade
@@ -645,10 +646,58 @@ public class MenuScene extends Scene {
     }
 
     private void showRules(Stage primaryStage) {
+        SoundManager.stopMusic();
         // Create a rules scene
         VBox layout = new VBox();
         layout.setStyle("-fx-alignment: center; -fx-background-color: #1b1b1b; -fx-padding: 20;");
         Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 36);
+        Label title = new Label("Game Rules");
+        title.setFont(customFont);
+        title.setStyle(
+            "-fx-text-fill: #FFD700;" + /* Gold-colored text */
+            "-fx-font-weight: bold;" +
+            "-fx-background-color: rgba(0, 0, 0, 0.8);" + /* Darker background */
+            "-fx-padding: 10;" +
+            "-fx-border-color: #FFD700;" + /* Gold border */
+            "-fx-border-width: 2px;" + /* Border thickness */
+            "-fx-border-radius: 5;" + /* Rounded corners */
+            "-fx-background-radius: 5;" /* Rounded corners for background */
+        );       
+
+        // Add the rules content
+        String rulesText = """
+            1. Each player takes turns to move their tank and fire a projectile.
+            2. There is a market phase before the game starts where each player gets money.
+            \u2022 Purchase fuel or health to make your tank stronger.
+            \u2022 Purchase special ammunition to pack a heavier punch:
+                - Big Bomb: Double explosion radius compared to basic ammo.
+                - Cluster Bomb: Explodes into basic ammo for wider area of impact.
+                - Sniper: Direct hits do triple damage but no explosion radius.
+            2. During your turn:
+            \u2022 Use the A and D keys to move left or right.
+            \u2022 Press Space to fire your selected projectile.
+            3. Each player has limited fuel and ammo:
+            \u2022 Plan your moves carefully to conserve resources.
+            4. The goal is to reduce your opponent's health to 0.
+            5. A Power-up appears once on the battlefield:
+            \u2022 Collect it to refuel, gain health, or gain special ammo.
+            6. Turns are timed (120 seconds each). Your turn will end when the timer hits 0.
+            7. The game ends when one player runs out of health.
+
+            Good luck, and may the best player win!
+        """;
+
+        Label rulesContent = new Label(rulesText);
+        rulesContent.setFont(Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 20));
+        rulesContent.setStyle(
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: bold;" +
+            "-fx-effect: dropshadow(gaussian, rgba(4, 4, 4, 0.8), 10, 0.7, 2, 2);" +
+            "-fx-padding: 10;" +
+            "-fx-wrap-text: true;"
+        );
+        rulesContent.setWrapText(true);
+        rulesContent.setAlignment(Pos.CENTER);
 
         String defaultButtonStyle = "-fx-text-fill: white;"
                 + "-fx-background-color: #000000;"
@@ -663,8 +712,11 @@ public class MenuScene extends Scene {
 
         backButton.setOnAction(e -> primaryStage.setScene(createMenuScene(primaryStage)));
 
-        layout.getChildren().add(backButton);
-
+        layout.getChildren().addAll(title, rulesContent, backButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 20; -fx-background-color: #000000;" +
+                "-fx-background-image: url('file:src/main/resources/images/rules.jpg'); " +
+                "-fx-background-repeat: no-repeat;" +
+                "-fx-background-size: contain;");
         Scene rulesScene = new Scene(layout, 800, 800);
         primaryStage.setScene(rulesScene);
     }
