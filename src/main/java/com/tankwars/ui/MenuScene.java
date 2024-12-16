@@ -305,7 +305,7 @@ public class MenuScene extends Scene {
         );
     
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Tank Wars - Upgrades");
+        primaryStage.setTitle("Tank Wars");
         if (isHost) {
             titleLabel.setText("Player 1: Upgrade Your Tank!");
             toggleUpgradeBox(true); // Host starts first, show upgrade box
@@ -611,15 +611,12 @@ public class MenuScene extends Scene {
 
 
     private void startGame(Stage primaryStage, boolean online, Object Connection) {
-        System.out.println("Starting Game");
         Platform.runLater(() -> {
             try {
-                System.out.println("In Try");
                 GameScene gameScene = new GameScene(null);
                 GameManager gameManager;
     
                 if (online) {
-                    System.out.println("In Online");
                     gameManager = new OnlineGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                         player1proj, player2proj, Connection);
                 } else {
@@ -627,11 +624,8 @@ public class MenuScene extends Scene {
                     gameManager = new LocalGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                        player1proj, player2proj);
                 }
-                System.out.println("After If");
                 gameScene.setGameManager(gameManager);
-                System.out.println("Done Setting Manager");
                 primaryStage.setScene(gameScene);
-                System.out.println("Done Setting Scene");
             } catch (Exception e) {
                 System.err.println("Error starting game: " + e.getMessage());
                 e.printStackTrace();
