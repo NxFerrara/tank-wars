@@ -658,12 +658,12 @@ public class MenuScene extends Scene {
             2. There is a market phase before the game starts where each player gets money.
             \u2022 Purchase fuel or health to make your tank stronger.
             \u2022 Purchase special ammunition to pack a heavier punch:
-                - Big Bomb: Double explosion radius compared to basic ammo.
-                - Sniper: Direct hits do triple damage but no explosion radius.
+                - Big Bomb: More damage and bigger explosion radius. Max Damage = 50.
+                - Sniper: More damage but lower explosion radius. Max Damage = 100.
             2. During your turn:
             \u2022 Use the A and D keys to move left or right.
             \u2022 Use the Q and E keys to adjust the angle of your shot.
-            \u2022 Press Space to fire your selected projectile.
+            \u2022 Press the fire button to fire your selected projectile.
             3. Each player has limited fuel and ammo:
             \u2022 Plan your moves carefully to conserve resources.
             4. The goal is to reduce your opponent's health to 0.
@@ -672,6 +672,7 @@ public class MenuScene extends Scene {
             6. Turns are timed (120 seconds each). Your turn will end when the timer hits 0.
             7. The game ends when one player runs out of health.
             8. The closer a tank is to the center of an explosion, the more damagge it takes.
+            9. Heavier projectiles fire with lower velocity. 
 
             Good luck, and may the best player win!
         """;

@@ -28,7 +28,7 @@ public class Explosion {
             case "Sniper" -> {
                 this.maxRadius = 30;
                 this.expansionSpeed = 1.75;
-                this.maxDamage = 35;
+                this.maxDamage = 100;
             }
             default -> {
                 this.maxRadius = 60;
