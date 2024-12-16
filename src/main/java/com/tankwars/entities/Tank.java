@@ -6,6 +6,7 @@ import com.tankwars.utils.SpriteLoader;
 public class Tank {
     // Tank capabilities - made static for global access
     public static final double MAX_SPEED = 0.5;
+    private static final double BARREL_ROTATION_SPEED = 2.0;
     
     // Tank state
     private double x;
@@ -57,13 +58,8 @@ public class Tank {
     public void stopRight() { isMovingRight = false; }
 
     public void consumeFuel() { fuel--; }
-    public void takeDamage(int damage){
-        if (hp - damage > 0){
-            hp -= damage;
-        }
-        else{
-            hp = 0;
-        }
+    public void takeDamage(int damage) {
+        hp = Math.max(0, hp - damage); // Ensure hp doesn't go below 0
     }
     
     // Getters and setters
@@ -94,4 +90,40 @@ public class Tank {
         this.terrainAngle = angleRadians;  // Store in radians
     }
     public void setVelocity(double velocity) { this.velocity = velocity; }
+
+    public void adjustBarrelAngle(boolean up) {
+        double delta = up ? -BARREL_ROTATION_SPEED : BARREL_ROTATION_SPEED;
+        // Constrain barrel angle between 0 and 180 degrees
+        // Note: 0 degrees points right, 180 points left
+        if (barrelAngle + delta > 90){
+            barrelAngle = 90;
+        }
+        else if (barrelAngle + delta < -90){
+            barrelAngle = -90;
+        }
+        else{
+            barrelAngle += delta;
+        }
+    }
+
+    public FiredProjectile fireProjectile(String type, String imagePath) {
+        double barrelLength = barrelSprite.getHeight();
+        double firingAngle = 90 - (barrelAngle + Math.toDegrees(terrainAngle));
+        
+        double radians = Math.toRadians(firingAngle);
+        
+        double barrelBaseY = y - 0.15*bodySprite.getHeight();
+        double startX = x + Math.cos(radians) * barrelLength;
+        double startY = barrelBaseY - Math.sin(radians) * barrelLength;
+        
+        double power = switch(type) {
+            case "Basic" -> 4;
+            case "Big Bomb" -> 3;
+            case "Cluster Bomb" -> 4;
+            case "Sniper" -> 5;
+            default -> 5;
+        };
+        
+        return new FiredProjectile(startX, startY, firingAngle, power, type, imagePath);
+    }
 } 

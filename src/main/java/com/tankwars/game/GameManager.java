@@ -6,6 +6,7 @@ import com.tankwars.game.terrain.Terrain;
 import com.tankwars.physics.PhysicsEngine;
 import javafx.animation.Timeline;
 import javafx.scene.Scene;
+import com.tankwars.entities.FiredProjectile;
 
 public abstract class GameManager {
     protected Terrain terrain;
@@ -38,5 +39,9 @@ public abstract class GameManager {
         return player2;
     }
     public PowerUp getPowerup(){ return powerUp;}
+
+    public FiredProjectile getActiveProjectile() {
+        return null; // Base class returns null, subclasses will override if needed
+    }
 
 }

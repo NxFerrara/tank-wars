@@ -1,6 +1,7 @@
 package com.tankwars.physics;
 
 import com.tankwars.game.terrain.Terrain;
+import com.tankwars.entities.FiredProjectile;
 import com.tankwars.entities.Tank;
 import java.util.HashMap;
 import java.util.Map;

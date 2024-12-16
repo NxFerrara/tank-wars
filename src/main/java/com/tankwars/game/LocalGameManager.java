@@ -25,6 +25,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 import javafx.scene.text.Font;
+import com.tankwars.entities.FiredProjectile;
+import com.tankwars.entities.Explosion;
 
 
 public class LocalGameManager extends GameManager{
@@ -55,6 +57,7 @@ public class LocalGameManager extends GameManager{
     private final int player2MaxHP;
     private final int[] player1proj;
     private final int[] player2proj;
+    private FiredProjectile activeProjectile;
 
 
     
@@ -301,7 +304,21 @@ public class LocalGameManager extends GameManager{
                 rightPressed = true;
                 updateTankMovement();
             }
-            if (e.getCode() == KeyCode.SPACE){
+            if (e.getCode() == KeyCode.Q) {
+                if (player1Turn) {
+                    player1.adjustBarrelAngle(true);
+                } else {
+                    player2.adjustBarrelAngle(true);
+                }
+            }
+            if (e.getCode() == KeyCode.E) {
+                if (player1Turn) {
+                    player1.adjustBarrelAngle(false);
+                } else {
+                    player2.adjustBarrelAngle(false);
+                }
+            }
+            if (e.getCode() == KeyCode.SPACE) {
                 fire();
             }
         });
@@ -375,53 +392,35 @@ public class LocalGameManager extends GameManager{
         }
         
     }
-    private void fire(){
-        String projFired = projectileSelector.getValue().getName();
-        if(player1Turn){
-            if(projFired.equals("Big Bomb")){
-                if(player1proj[0] > 0){
-                    player1proj[0] -=1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Cluster Bomb")){
-                if(player1proj[1] > 1){
-                    player1proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player1proj[2] > 1){
-                    player1proj[2] -= 1;
-                    endTurn();
-                }
-            }
-            else{
-                endTurn();           
-            }
-        }
-        else{
-            if(projFired.equals("Big Bomb")){
-                if(player2proj[0] > 0){
-                    player2proj[0] -=1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Cluster Bomb")){
-                if(player2proj[1] > 1){
-                    player2proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player2proj[2] > 1){
-                    player2proj[2] -= 1;
-                    endTurn();
-                }
-            }
-            else{
-                endTurn();           
-            }
+    private void fire() {
+        if (activeProjectile != null) return; // Don't fire if projectile is active
+        
+        String projType = projectileSelector.getValue().getName();
+        String imagePath = projectileSelector.getValue().getImagePath();
+        
+        // Check ammo and consume it
+        if (player1Turn) {
+            if (projType.equals("Big Bomb") && player1proj[0] <= 0) return;
+            if (projType.equals("Cluster Bomb") && player1proj[1] <= 0) return;
+            if (projType.equals("Sniper") && player1proj[2] <= 0) return;
+            
+            // Consume ammo if not basic projectile
+            if (projType.equals("Big Bomb")) player1proj[0]--;
+            else if (projType.equals("Cluster Bomb")) player1proj[1]--;
+            else if (projType.equals("Sniper")) player1proj[2]--;
+            
+            activeProjectile = player1.fireProjectile(projType, imagePath);
+        } else {
+            if (projType.equals("Big Bomb") && player2proj[0] <= 0) return;
+            if (projType.equals("Cluster Bomb") && player2proj[1] <= 0) return;
+            if (projType.equals("Sniper") && player2proj[2] <= 0) return;
+            
+            // Consume ammo if not basic projectile
+            if (projType.equals("Big Bomb")) player2proj[0]--;
+            else if (projType.equals("Cluster Bomb")) player2proj[1]--;
+            else if (projType.equals("Sniper")) player2proj[2]--;
+            
+            activeProjectile = player2.fireProjectile(projType, imagePath);
         }
     }
     
@@ -556,13 +555,48 @@ public class LocalGameManager extends GameManager{
     public void update() {        
         // Apply terrain physics
         player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
-        player1HPText.setText(String.valueOf(player1.gethp())); // Update fuel number
+        player1HPText.setText(String.valueOf(player1.gethp()));
     
         player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
-        player2HPText.setText(String.valueOf(player2.gethp())); // Update fuel number
+        player2HPText.setText(String.valueOf(player2.gethp()));
         physics.update(player1, terrain);
         physics.update(player2, terrain);
         checkPowerUpCollision();
+        
+        if (activeProjectile != null) {
+            if (activeProjectile.isActive()) {
+                activeProjectile.update();
+                
+                if (activeProjectile.getY() >= terrain.getHeightAt((int)activeProjectile.getX()) ||
+                    activeProjectile.getX() < 0 || activeProjectile.getX() > terrain.getWidth()) {
+                    activeProjectile.deactivate();
+                    // Check damage immediately when explosion is created
+                    Explosion explosion = activeProjectile.getExplosion();
+                    explosion.checkTankDamage(player1);
+                    explosion.checkTankDamage(player2);
+                    explosion.setDamageDealt(true);
+                }
+            } else {
+                activeProjectile.update();
+                if (activeProjectile.getExplosion() != null && !activeProjectile.getExplosion().isActive()) {
+                    activeProjectile = null;
+                    endTurn();
+                }
+            }
+        }
+        
+        // Check for game over
+        if (player1.gethp() <= 0) {
+            gameLoop.stop();
+            turnBanner.setText("Player 2 Wins!");
+            fireButton.setDisable(true);
+            return;
+        } else if (player2.gethp() <= 0) {
+            gameLoop.stop();
+            turnBanner.setText("Player 1 Wins!");
+            fireButton.setDisable(true);
+            return;
+        }
     }
 
     protected void checkPowerUpCollision() {
@@ -606,5 +640,9 @@ public class LocalGameManager extends GameManager{
     public Tank getPlayer2() { return player2; }
     public void manuallyEndTurn() {
         endTurn(); // Allows the user to manually end the turn
+    }
+
+    public FiredProjectile getActiveProjectile() {
+        return activeProjectile;
     }
 } 

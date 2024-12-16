@@ -10,6 +10,8 @@ import com.tankwars.game.terrain.Terrain;
 import com.tankwars.game.GameManager;
 import javafx.animation.AnimationTimer;
 import java.util.Random;
+import com.tankwars.entities.FiredProjectile;
+import com.tankwars.entities.Explosion;
 
 public class TerrainView extends Canvas {
     private GameManager gameManager;
@@ -87,6 +89,25 @@ public class TerrainView extends Canvas {
         drawTank(gc, player2);
         PowerUp powerUp = gameManager.getPowerup();
         powerUp.render(gc);
+        
+        // Draw active projectile if it exists
+        FiredProjectile projectile = gameManager.getActiveProjectile();
+        if (projectile != null) {
+            if (projectile.isActive()) {
+                gc.save();
+                gc.translate(projectile.getX(), projectile.getY());
+                gc.rotate(projectile.getAngle());
+                gc.drawImage(projectile.getSprite(),
+                            -projectile.getSprite().getWidth() / 2,
+                            -projectile.getSprite().getHeight() / 2);
+                gc.restore();
+            }
+            
+            Explosion explosion = projectile.getExplosion();
+            if (explosion != null) {
+                explosion.render(gc);
+            }
+        }
     }
     
     private void drawTank(GraphicsContext gc, Tank tank) {
@@ -100,13 +121,13 @@ public class TerrainView extends Canvas {
         
         // Draw barrel first (behind tank body)
         gc.save();
-        // Move to barrel pivot point (75% up from bottom of tank body)
-        double barrelPivotY = -tank.getBodySprite().getHeight() * 0.5;
+        // Move pivot point higher up (above tank body)
+        double barrelPivotY = -tank.getBodySprite().getHeight() * 0.15;
         gc.translate(0, barrelPivotY);
         gc.rotate(tank.getBarrelAngle());
         gc.drawImage(tank.getBarrelSprite(),
                     -tank.getBarrelSprite().getWidth() / 2,
-                    -tank.getBarrelSprite().getHeight() / 2);
+                    -tank.getBarrelSprite().getHeight());
         gc.restore();
         
         // Draw tank body on top
