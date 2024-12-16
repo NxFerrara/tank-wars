@@ -296,12 +296,12 @@ public class LocalGameManager extends GameManager{
         startTurn();
     }
 
-    private void showNotification(String message) {
+    private void showNotification(String message, int duration) {
         notificationLabel.setText(message);
         notificationLabel.setVisible(true);
         
         // Fade out animation
-        FadeTransition fadeOut = new FadeTransition(Duration.seconds(3), notificationLabel);
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(duration), notificationLabel);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.0);
         fadeOut.setOnFinished(event -> notificationLabel.setVisible(false));
@@ -545,7 +545,10 @@ public class LocalGameManager extends GameManager{
                     setGraphic(imageView);
                 }
             }
-        });    
+        });
+        leftPressed = false;
+        rightPressed = false;
+        updateTankMovement();    
         player1Turn = !player1Turn; // Switch turns
         startTurn(); // Start the next turn
     }
@@ -586,12 +589,12 @@ public class LocalGameManager extends GameManager{
         // Check for game over
         if (player1.gethp() <= 0) {
             gameLoop.stop();
-            turnBanner.setText("Player 2 Wins!");
+            showNotification("Player 2 Wins!", 100);
             fireButton.setDisable(true);
             return;
         } else if (player2.gethp() <= 0) {
             gameLoop.stop();
-            turnBanner.setText("Player 1 Wins!");
+            showNotification("Player 1 Wins!", 100);
             fireButton.setDisable(true);
             return;
         }
@@ -614,19 +617,19 @@ public class LocalGameManager extends GameManager{
             case "fuel":
                 tank.refuel();
                 if(player1Turn){
-                    showNotification("Player 1 Collected Power-Up: Refuel!"); 
+                    showNotification("Player 1 Collected Power-Up: Refuel!", 7); 
                 }
                 else{
-                    showNotification("Player 2 Collected Power-Up: Refuel!"); 
+                    showNotification("Player 2 Collected Power-Up: Refuel!", 7); 
                 }
                 break;
             case "health":
                 tank.addHealth(25);
                 if(player1Turn){
-                    showNotification("Player 1 Collected Power-Up: Extra HP!"); 
+                    showNotification("Player 1 Collected Power-Up: Extra HP!", 7); 
                 }
                 else{
-                    showNotification("Player 2 Collected Power-Up: Extra HP!"); 
+                    showNotification("Player 2 Collected Power-Up: Extra HP!", 7); 
                 } 
                 break;
             case "ammo":
@@ -638,16 +641,16 @@ public class LocalGameManager extends GameManager{
                     player2proj[randomNum] += 3;
                 }
                 if(player1Turn && randomNum == 0){
-                    showNotification("Player 1 Collected Power-Up: 3 Big Bombs!"); 
+                    showNotification("Player 1 Collected Power-Up: 3 Big Bombs!", 7); 
                 }
                 else if(player1Turn && randomNum ==1){
-                    showNotification("Player 1 Collected Power-Up: 3 Snipers!"); 
+                    showNotification("Player 1 Collected Power-Up: 3 Snipers!", 7); 
                 }
                 else if(!player1Turn && randomNum == 0){
-                    showNotification("Player 2 Collected Power-Up: 3 Big Bombs!"); 
+                    showNotification("Player 2 Collected Power-Up: 3 Big Bombs!", 7); 
                 }
                 else{
-                    showNotification("Player 2 Collected Power-Up: 3 Snipers!"); 
+                    showNotification("Player 2 Collected Power-Up: 3 Snipers!", 7); 
                 }
                 break;
             default:

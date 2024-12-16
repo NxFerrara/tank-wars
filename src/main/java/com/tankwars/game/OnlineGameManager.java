@@ -3,6 +3,8 @@ package com.tankwars.game;
 import java.io.IOException;
 import java.util.Random;
 
+import com.tankwars.entities.Explosion;
+import com.tankwars.entities.FiredProjectile;
 import com.tankwars.entities.PowerUp;
 import com.tankwars.entities.Projectile;
 import com.tankwars.entities.Tank;
@@ -11,6 +13,7 @@ import com.tankwars.ui.components.TerrainView;
 import com.tankwars.network.GameClient;
 import com.tankwars.network.GameHost;
 import javafx.animation.AnimationTimer;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -62,6 +65,8 @@ public class OnlineGameManager extends GameManager{
     private final int[] player2proj;
     private boolean myTurn = true;
     private boolean isPlayer1 = false;
+    private FiredProjectile activeProjectile;
+    private final Label notificationLabel;
 
 
     
@@ -278,7 +283,20 @@ public class OnlineGameManager extends GameManager{
         });    
         projectileSelector.setPrefWidth(175);
         StackPane.setAlignment(projectileSelector, Pos.BOTTOM_CENTER);
-        StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0)); // 10px margin from the top
+        StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0));
+        notificationLabel = new Label();
+        notificationLabel.setFont(Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 16));
+        notificationLabel.setStyle(
+            "-fx-text-fill: yellow;" +
+            "-fx-font-size: 20px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-color: rgba(0, 0, 0, 0.7);" +
+            "-fx-padding: 10;" +
+            "-fx-background-radius: 5px;"
+        );
+        notificationLabel.setVisible(false);
+        StackPane.setAlignment(notificationLabel, Pos.TOP_CENTER);
+        StackPane.setMargin(notificationLabel, new Insets(50, 0, 0, 0));
         root.getChildren().addAll( terrainView,player1FuelBox, player2FuelBox, 
             player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector);
         setupInput(gameScene);
@@ -292,6 +310,18 @@ public class OnlineGameManager extends GameManager{
         gameLoop.start();
         startTurn();
     }
+
+    private void showNotification(String message, int duration) {
+        notificationLabel.setText(message);
+        notificationLabel.setVisible(true);
+        
+        // Fade out animation
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(duration), notificationLabel);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(event -> notificationLabel.setVisible(false));
+        fadeOut.play();
+    }
     
     public void setupInput(Scene scene) {
         scene.setOnKeyPressed(e -> {
@@ -302,6 +332,20 @@ public class OnlineGameManager extends GameManager{
             if (e.getCode() == KeyCode.D) {
                 rightPressed = true;
                 updateTankMovement();
+            }
+            if (e.getCode() == KeyCode.Q) {
+                if (isPlayer1) {
+                    player1.adjustBarrelAngle(true);
+                } else {
+                    player2.adjustBarrelAngle(true);
+                }
+            }
+            if (e.getCode() == KeyCode.E) {
+                if (isPlayer1) {
+                    player1.adjustBarrelAngle(false);
+                } else {
+                    player2.adjustBarrelAngle(false);
+                }
             }
             if (e.getCode() == KeyCode.SPACE){
                 fire();
@@ -349,11 +393,15 @@ public class OnlineGameManager extends GameManager{
                 }
             }
         });
-
         if (!myTurn) {
             myTurn = true;
             startTurn();
         }}
+    else{
+        gameLoop.stop();
+        showNotification(message, 100); 
+        fireButton.setDisable(true);
+    }
     }
 
     private void renderTankUpdates() {
@@ -428,41 +476,31 @@ public class OnlineGameManager extends GameManager{
         }
         
     }
-    private void fire(){
-        String projFired = projectileSelector.getValue().getName();
-        if(isPlayer1){
-            if(projFired.equals("Big Bomb")){
-                if(player1proj[0] > 0){
-                    player1proj[0] -=1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player1proj[1] > 1){
-                    player1proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else{
-                endTurn();           
-            }
-        }
-        else{
-            if(projFired.equals("Big Bomb")){
-                if(player2proj[0] > 0){
-                    player2proj[0] -=1;
-                    endTurn();
-                }
-            }
-            else if(projFired.equals("Sniper")){
-                if(player2proj[1] > 1){
-                    player2proj[1] -= 1;
-                    endTurn();
-                }
-            }
-            else{
-                endTurn();           
-            }
+    private void fire() {
+        if (activeProjectile != null) return; // Don't fire if projectile is active
+        
+        String projType = projectileSelector.getValue().getName();
+        String imagePath = projectileSelector.getValue().getImagePath();
+        
+        // Check ammo and consume it
+        if (isPlayer1) {
+            if (projType.equals("Big Bomb") && player1proj[0] <= 0) return;
+            if (projType.equals("Sniper") && player1proj[1] <= 0) return;
+            
+            // Consume ammo if not basic projectile
+            if (projType.equals("Big Bomb")) player1proj[0]--;
+            else if (projType.equals("Sniper")) player1proj[1]--;
+            
+            activeProjectile = player1.fireProjectile(projType, imagePath);
+        } else {
+            if (projType.equals("Big Bomb") && player2proj[0] <= 0) return;
+            if (projType.equals("Sniper") && player2proj[1] <= 0) return;
+            
+            // Consume ammo if not basic projectile
+            if (projType.equals("Big Bomb")) player2proj[0]--;
+            else if (projType.equals("Sniper")) player2proj[1]--;
+            
+            activeProjectile = player2.fireProjectile(projType, imagePath);
         }
     }
     
@@ -576,6 +614,9 @@ public class OnlineGameManager extends GameManager{
                 }
             }
         });
+        leftPressed = false;
+        rightPressed = false;
+        updateTankMovement(); 
         String endTurnData = "";
         if(isPlayer1){
             endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s",
@@ -594,10 +635,53 @@ public class OnlineGameManager extends GameManager{
     }
     public void update() {
         if (myTurn) {
-            // Update physics and check collisions only during the player's turn
+            player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
+            player1HPText.setText(String.valueOf(player1.gethp()));
+        
+            player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
+            player2HPText.setText(String.valueOf(player2.gethp()));
             physics.update(player1, terrain);
             physics.update(player2, terrain);
             checkPowerUpCollision();
+            
+            if (activeProjectile != null) {
+                if (activeProjectile.isActive()) {
+                    activeProjectile.update();
+                    
+                    if (activeProjectile.getY() >= terrain.getHeightAt((int)activeProjectile.getX()) ||
+                        activeProjectile.getX() < 0 || activeProjectile.getX() > terrain.getWidth()) {
+                        activeProjectile.deactivate();
+                        // Check damage immediately when explosion is created
+                        Explosion explosion = activeProjectile.getExplosion();
+                        explosion.checkTankDamage(player1);
+                        explosion.checkTankDamage(player2);
+                        explosion.setDamageDealt(true);
+                    }
+                } else {
+                    activeProjectile.update();
+                    if (activeProjectile.getExplosion() != null && !activeProjectile.getExplosion().isActive()) {
+                        activeProjectile = null;
+                        endTurn();
+                    }
+                }
+            }
+            
+            if (player1.gethp() <= 0) {
+                gameLoop.stop();
+                showNotification("Player 2 Wins!", 100);
+                if (connection instanceof GameHost) {
+                    ((GameHost) connection).sendMessage("Player 2 Wins!"); 
+                fireButton.setDisable(true);
+                return;
+            } else if (player2.gethp() <= 0) {
+                gameLoop.stop();
+                showNotification("Player 1 Wins!", 100);
+                if (connection instanceof GameClient) {
+                    ((GameClient) connection).sendMessage("Player 1 Wins!"); 
+                fireButton.setDisable(true);
+                return;
+            }
+            }
         } else {
             // Listen for opponent's end-turn data
             try {
@@ -613,6 +697,7 @@ public class OnlineGameManager extends GameManager{
             } catch (IOException e) {
                 System.err.println("Error receiving message: " + e.getMessage());
             }
+        }
         }
     }
 
@@ -631,10 +716,22 @@ public class OnlineGameManager extends GameManager{
     public void applyPowerUpEffect(Tank tank, PowerUp powerUp) {
         switch (powerUp.getType()) {
             case "fuel":
-                tank.refuel(); // Example: Add 50 units of fuel
+                tank.refuel();
+                if(isPlayer1){
+                    showNotification("Player 1 Collected Power-Up: Refuel!", 7); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: Refuel!", 7); 
+                }
                 break;
             case "health":
-                tank.addHealth(25); // Example: Add 25 health points
+                tank.addHealth(25);
+                if(isPlayer1){
+                    showNotification("Player 1 Collected Power-Up: Extra HP!", 7); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: Extra HP!", 7); 
+                } 
                 break;
             case "ammo":
                 int randomNum = new Random().nextInt(2);
@@ -644,7 +741,18 @@ public class OnlineGameManager extends GameManager{
                 else{
                     player2proj[randomNum] += 3;
                 }
-                
+                if(isPlayer1 && randomNum == 0){
+                    showNotification("Player 1 Collected Power-Up: 3 Big Bombs!", 7); 
+                }
+                else if(isPlayer1 && randomNum ==1){
+                    showNotification("Player 1 Collected Power-Up: 3 Snipers!", 7); 
+                }
+                else if(!isPlayer1 && randomNum == 0){
+                    showNotification("Player 2 Collected Power-Up: 3 Big Bombs!", 7); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: 3 Snipers!", 7); 
+                }
                 break;
             default:
                 break;
