@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -28,8 +29,8 @@ public class MenuScene extends Scene {
     private boolean isPlayer1 = true; // Track whose turn it is
     private int player1Money = 100, player1Fuel = 300, player1HP = 100;
     private int player2Money = 100, player2Fuel = 300, player2HP = 100;
-    private int[] player1proj = {0,0,0};
-    private int[] player2proj = {0,0,0};
+    private int[] player1proj = {0,0};
+    private int[] player2proj = {0,0};
     private Label titleLabel = new Label("Player 1: Upgrade Your Tank!");
     private Label moneyLabel = new Label("Money: $100");
     private VBox upgradeBox;
@@ -304,7 +305,7 @@ public class MenuScene extends Scene {
         );
     
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Tank Wars - Upgrades");
+        primaryStage.setTitle("Tank Wars");
         if (isHost) {
             titleLabel.setText("Player 1: Upgrade Your Tank!");
             toggleUpgradeBox(true); // Host starts first, show upgrade box
@@ -351,16 +352,14 @@ public class MenuScene extends Scene {
                     player1Fuel + ":" +
                     player1HP + ":" +
                     player1proj[0] + ":" +
-                    player1proj[1] + ":" +
-                    player1proj[2];
+                    player1proj[1];
         } else {
             return "END_TURN:" +
                     player2Money + ":" +
                     player2Fuel + ":" +
                     player2HP + ":" +
                     player2proj[0] + ":" +
-                    player2proj[1] + ":" +
-                    player2proj[2];
+                    player2proj[1];
         }
     }
 
@@ -384,7 +383,6 @@ public class MenuScene extends Scene {
                 player2HP = Integer.parseInt(data[3]);
                 player2proj[0] = Integer.parseInt(data[4]);
                 player2proj[1] = Integer.parseInt(data[5]);
-                player2proj[2] = Integer.parseInt(data[6]);
             } else {
                 isPlayer1 = false;
                 player1Money = Integer.parseInt(data[1]);
@@ -392,7 +390,6 @@ public class MenuScene extends Scene {
                 player1HP = Integer.parseInt(data[3]);
                 player1proj[0] = Integer.parseInt(data[4]);
                 player1proj[1] = Integer.parseInt(data[5]);
-                player1proj[2] = Integer.parseInt(data[6]);
                 toggleUpgradeBox(true); // Show the upgrade box for Player 2
             }
             updateMoneyLabel();
@@ -443,7 +440,7 @@ public class MenuScene extends Scene {
         moneyLabel.setStyle(
             "-fx-text-fill: white;" +
             "-fx-font-weight: bold;" +
-            "-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.8), 5, 0.3, 0, 0);" +
+            "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 10, 0.7, 2, 2);" +
             "-fx-padding: 10;"
         );
         // Fuel Upgrade
@@ -467,7 +464,7 @@ public class MenuScene extends Scene {
         + "-fx-padding: 10;"
         + "-fx-font-weight: bold";
         ComboBox<String> projectileSelector = new ComboBox<>();
-        projectileSelector.getItems().addAll( "Big Bomb - $20", "Cluster Bomb - $20", "Sniper - $20");
+        projectileSelector.getItems().addAll( "Big Bomb - $20", "Sniper - $20");
         projectileSelector.setValue("Big Bomb - $20");
         projectileSelector.setCellFactory(listView -> new ListCell<>() {
             @Override
@@ -594,8 +591,7 @@ public class MenuScene extends Scene {
             if (player1Money >= cost) {
                 player1Money -= cost;
                 if (type.substring(0,3).equals("Big")) player1proj[0] += amount;
-                if (type.substring(0,3).equals("Clu")) player1proj[1] += amount;
-                if (type.substring(0,3).equals("Sni")) player1proj[2] += amount;
+                if (type.substring(0,3).equals("Sni")) player1proj[1] += amount;
                 System.out.println("Player 1 bought: " + amount + " " + projType+ ", Cost: $" + cost);
             } else {
                 System.out.println("Player 1 doesn't have enough money.");
@@ -604,8 +600,7 @@ public class MenuScene extends Scene {
             if (player2Money >= cost) {
                 player2Money -= cost;
                 if (type.substring(0,3).equals("Big")) player2proj[0] += amount;
-                if (type.substring(0,3).equals("Clu")) player2proj[1] += amount;
-                if (type.substring(0,3).equals("Sni")) player2proj[2] += amount;
+                if (type.substring(0,3).equals("Sni")) player2proj[1] += amount;
                 System.out.println("Player 2 bought: " + amount + " " + projType+ ", Cost: $" + cost);
             } else {
                 System.out.println("Player 2 doesn't have enough money.");
@@ -616,15 +611,12 @@ public class MenuScene extends Scene {
 
 
     private void startGame(Stage primaryStage, boolean online, Object Connection) {
-        System.out.println("Starting Game");
         Platform.runLater(() -> {
             try {
-                System.out.println("In Try");
                 GameScene gameScene = new GameScene(null);
                 GameManager gameManager;
     
                 if (online) {
-                    System.out.println("In Online");
                     gameManager = new OnlineGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                         player1proj, player2proj, Connection);
                 } else {
@@ -632,11 +624,8 @@ public class MenuScene extends Scene {
                     gameManager = new LocalGameManager(gameScene, player1HP, player2HP, player1Fuel, player2Fuel, 
                                                        player1proj, player2proj);
                 }
-                System.out.println("After If");
                 gameScene.setGameManager(gameManager);
-                System.out.println("Done Setting Manager");
                 primaryStage.setScene(gameScene);
-                System.out.println("Done Setting Scene");
             } catch (Exception e) {
                 System.err.println("Error starting game: " + e.getMessage());
                 e.printStackTrace();
@@ -645,10 +634,59 @@ public class MenuScene extends Scene {
     }
 
     private void showRules(Stage primaryStage) {
+        SoundManager.stopMusic();
         // Create a rules scene
         VBox layout = new VBox();
         layout.setStyle("-fx-alignment: center; -fx-background-color: #1b1b1b; -fx-padding: 20;");
         Font customFont = Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 36);
+        Label title = new Label("Game Rules");
+        title.setFont(customFont);
+        title.setStyle(
+            "-fx-text-fill: #FFD700;" + /* Gold-colored text */
+            "-fx-font-weight: bold;" +
+            "-fx-background-color: rgba(0, 0, 0, 0.8);" + /* Darker background */
+            "-fx-padding: 10;" +
+            "-fx-border-color: #FFD700;" + /* Gold border */
+            "-fx-border-width: 2px;" + /* Border thickness */
+            "-fx-border-radius: 5;" + /* Rounded corners */
+            "-fx-background-radius: 5;" /* Rounded corners for background */
+        );       
+
+        // Add the rules content
+        String rulesText = """
+            1. Each player takes turns to move their tank and fire a projectile.
+            2. There is a market phase before the game starts where each player gets money.
+            \u2022 Purchase fuel or health to make your tank stronger.
+            \u2022 Purchase special ammunition to pack a heavier punch:
+                - Big Bomb: Double explosion radius compared to basic ammo.
+                - Sniper: Direct hits do triple damage but no explosion radius.
+            2. During your turn:
+            \u2022 Use the A and D keys to move left or right.
+            \u2022 Use the Q and E keys to adjust the angle of your shot.
+            \u2022 Press Space to fire your selected projectile.
+            3. Each player has limited fuel and ammo:
+            \u2022 Plan your moves carefully to conserve resources.
+            4. The goal is to reduce your opponent's health to 0.
+            5. A Power-up appears once on the battlefield:
+            \u2022 Collect it to refuel, gain health, or gain special ammo.
+            6. Turns are timed (120 seconds each). Your turn will end when the timer hits 0.
+            7. The game ends when one player runs out of health.
+            8. The closer a tank is to the center of an explosion, the more damagge it takes.
+
+            Good luck, and may the best player win!
+        """;
+
+        Label rulesContent = new Label(rulesText);
+        rulesContent.setFont(Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 20));
+        rulesContent.setStyle(
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: bold;" +
+            "-fx-effect: dropshadow(gaussian, rgba(4, 4, 4, 0.8), 10, 0.7, 2, 2);" +
+            "-fx-padding: 10;" +
+            "-fx-wrap-text: true;"
+        );
+        rulesContent.setWrapText(true);
+        rulesContent.setAlignment(Pos.CENTER);
 
         String defaultButtonStyle = "-fx-text-fill: white;"
                 + "-fx-background-color: #000000;"
@@ -663,8 +701,11 @@ public class MenuScene extends Scene {
 
         backButton.setOnAction(e -> primaryStage.setScene(createMenuScene(primaryStage)));
 
-        layout.getChildren().add(backButton);
-
+        layout.getChildren().addAll(title, rulesContent, backButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 20; -fx-background-color: #000000;" +
+                "-fx-background-image: url('file:src/main/resources/images/rules.jpg'); " +
+                "-fx-background-repeat: no-repeat;" +
+                "-fx-background-size: contain;");
         Scene rulesScene = new Scene(layout, 800, 800);
         primaryStage.setScene(rulesScene);
     }

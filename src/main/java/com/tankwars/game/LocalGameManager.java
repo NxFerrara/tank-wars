@@ -8,6 +8,7 @@ import com.tankwars.entities.Tank;
 import com.tankwars.game.terrain.Terrain;
 import com.tankwars.ui.components.TerrainView;
 import javafx.animation.AnimationTimer;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
@@ -58,6 +59,7 @@ public class LocalGameManager extends GameManager{
     private final int[] player1proj;
     private final int[] player2proj;
     private FiredProjectile activeProjectile;
+    private final Label notificationLabel;
 
 
     
@@ -177,7 +179,6 @@ public class LocalGameManager extends GameManager{
         projectileSelector.getItems().addAll(
                 new Projectile("Basic", "file:src/main/resources/images/basic.png"),
                 new Projectile("Big Bomb", "file:src/main/resources/images/bigbomb.png"),
-                new Projectile("Cluster Bomb", "file:src/main/resources/images/clusterbomb.png"),
                 new Projectile("Sniper", "file:src/main/resources/images/sniper.png")
         );
         projectileSelector.setValue(projectileSelector.getItems().get(0)); // Default to the first item
@@ -202,11 +203,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -216,11 +214,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -250,11 +245,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -264,11 +256,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -279,9 +268,22 @@ public class LocalGameManager extends GameManager{
         });    
         projectileSelector.setPrefWidth(175);
         StackPane.setAlignment(projectileSelector, Pos.BOTTOM_CENTER);
-        StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0)); // 10px margin from the top
-        root.getChildren().addAll( terrainView,player1FuelBox, player2FuelBox, 
-            player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector);
+        StackPane.setMargin(projectileSelector, new Insets(0, 0, 80, 0)); 
+        notificationLabel = new Label();
+        notificationLabel.setFont(Font.loadFont("file:src/main/resources/fonts/ITC Machine Medium.otf", 16));
+        notificationLabel.setStyle(
+            "-fx-text-fill: yellow;" +
+            "-fx-font-size: 20px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-color: rgba(0, 0, 0, 0.7);" +
+            "-fx-padding: 10;" +
+            "-fx-background-radius: 5px;"
+        );
+        notificationLabel.setVisible(false);
+        StackPane.setAlignment(notificationLabel, Pos.TOP_CENTER);
+        StackPane.setMargin(notificationLabel, new Insets(50, 0, 0, 0));
+        root.getChildren().addAll(terrainView,player1FuelBox, player2FuelBox, 
+            player1HPBox, player2HPBox, timerLabel, turnBanner, fireButton,projectileSelector, notificationLabel);
         setupInput(gameScene);
         setupTurnTimer();
         gameLoop = new AnimationTimer() {
@@ -292,6 +294,18 @@ public class LocalGameManager extends GameManager{
         };
         gameLoop.start();
         startTurn();
+    }
+
+    private void showNotification(String message) {
+        notificationLabel.setText(message);
+        notificationLabel.setVisible(true);
+        
+        // Fade out animation
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(3), notificationLabel);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(event -> notificationLabel.setVisible(false));
+        fadeOut.play();
     }
     
     public void setupInput(Scene scene) {
@@ -473,11 +487,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -487,11 +498,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -521,11 +529,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player1proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player1proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player1proj[2]);
+                            setText(itemName + " - " + player1proj[1]);
                         }
                     }
                     else{
@@ -535,11 +540,8 @@ public class LocalGameManager extends GameManager{
                         else if(itemName.equals("Big Bomb")){
                             setText(itemName + " - " + player2proj[0]);
                         }
-                        else if(itemName.equals("Cluster Bomb")){
-                            setText(itemName + " - " + player2proj[1]);
-                        }
                         else {
-                            setText(itemName + " - " + player2proj[2]);
+                            setText(itemName + " - " + player2proj[1]);
                         }
 
                     }
@@ -614,18 +616,42 @@ public class LocalGameManager extends GameManager{
     public void applyPowerUpEffect(Tank tank, PowerUp powerUp) {
         switch (powerUp.getType()) {
             case "fuel":
-                tank.refuel(); // Example: Add 50 units of fuel
+                tank.refuel();
+                if(player1Turn){
+                    showNotification("Player 1 Collected Power-Up: Refuel!"); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: Refuel!"); 
+                }
                 break;
             case "health":
-                tank.addHealth(25); // Example: Add 25 health points
+                tank.addHealth(25);
+                if(player1Turn){
+                    showNotification("Player 1 Collected Power-Up: Extra HP!"); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: Extra HP!"); 
+                } 
                 break;
             case "ammo":
-                int randomNum = new Random().nextInt(3);
+                int randomNum = new Random().nextInt(2);
                 if(player1Turn){
                     player1proj[randomNum] += 3;
                 }
                 else{
                     player2proj[randomNum] += 3;
+                }
+                if(player1Turn && randomNum == 0){
+                    showNotification("Player 1 Collected Power-Up: 3 Big Bombs!"); 
+                }
+                else if(player1Turn && randomNum ==1){
+                    showNotification("Player 1 Collected Power-Up: 3 Snipers!"); 
+                }
+                else if(!player1Turn && randomNum == 0){
+                    showNotification("Player 2 Collected Power-Up: 3 Big Bombs!"); 
+                }
+                else{
+                    showNotification("Player 2 Collected Power-Up: 3 Snipers!"); 
                 }
                 break;
             default:
