@@ -415,24 +415,20 @@ public class LocalGameManager extends GameManager{
         // Check ammo and consume it
         if (player1Turn) {
             if (projType.equals("Big Bomb") && player1proj[0] <= 0) return;
-            if (projType.equals("Cluster Bomb") && player1proj[1] <= 0) return;
-            if (projType.equals("Sniper") && player1proj[2] <= 0) return;
+            if (projType.equals("Sniper") && player1proj[1] <= 0) return;
             
             // Consume ammo if not basic projectile
             if (projType.equals("Big Bomb")) player1proj[0]--;
-            else if (projType.equals("Cluster Bomb")) player1proj[1]--;
-            else if (projType.equals("Sniper")) player1proj[2]--;
+            else if (projType.equals("Sniper")) player1proj[1]--;
             
             activeProjectile = player1.fireProjectile(projType, imagePath);
         } else {
             if (projType.equals("Big Bomb") && player2proj[0] <= 0) return;
-            if (projType.equals("Cluster Bomb") && player2proj[1] <= 0) return;
-            if (projType.equals("Sniper") && player2proj[2] <= 0) return;
+            if (projType.equals("Sniper") && player2proj[1] <= 0) return;
             
             // Consume ammo if not basic projectile
             if (projType.equals("Big Bomb")) player2proj[0]--;
-            else if (projType.equals("Cluster Bomb")) player2proj[1]--;
-            else if (projType.equals("Sniper")) player2proj[2]--;
+            else if (projType.equals("Sniper")) player2proj[1]--;
             
             activeProjectile = player2.fireProjectile(projType, imagePath);
         }
