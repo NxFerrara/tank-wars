@@ -1,7 +1,7 @@
 # Tank Wars
 
 ## Overview
-Tank Wars is a Java-based two-player online multiplayer game featuring physics-based tank combat on a destructible 2D map. Players control tanks and must strategically reduce their opponent's hit points to zero.
+Tank Wars is a Java-based two-player online and local multiplayer game featuring physics-based tank combat on a randomly generated 2D map. Players control tanks and must strategically reduce their opponent's hit points to zero.
 
 ## Features 
 - **Online and Local Multiplayer:** Turn-based gameplay with timer system
