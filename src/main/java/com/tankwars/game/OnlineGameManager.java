@@ -460,13 +460,19 @@ public class OnlineGameManager extends GameManager{
                     
                     renderTankUpdates();
                     
-                    if (isActive.equals("false")) {
+                    if (isActive.equals("false") && powerUp.isActive() && !isPlayer1) {
+                        showNotification("Player 1 collected a PowerUp.", 7);
+                        powerUp.collect();
+                    }
+                    else if (isActive.equals("false") && powerUp.isActive() && isPlayer1){
+                        showNotification("Player 2 collected a PowerUp.", 7);
                         powerUp.collect();
                     }
                     
                     myTurn = true;
                     startTurn();
-                    turnBanner.setText(isPlayer1 ? "Player 1's Turn" : "Player 2's Turn");
+                    turnBanner.setText(isPlayer1 ? "Player 1" : "Player 2");
+                    turnBanner.setStyle(isPlayer1 ? "-fx-text-fill: #0000FF;" : "-fx-text-fill: #FF0000;");
                 });
             } catch (NumberFormatException e) {
                 System.err.println("Error parsing message values: " + e.getMessage());
@@ -602,6 +608,7 @@ public class OnlineGameManager extends GameManager{
         // Reset timer for the current turn
         timeRemaining = 120;
         timerLabel.setText("Time Remaining: 120 seconds");
+        timerLabel.setVisible(true);
         if ((isPlayer1 && myTurn) || (!isPlayer1 && !myTurn)) {
             turnBanner.setText("Player 1");
             turnBanner.setStyle( "-fx-text-fill: #0000FF;");
@@ -621,6 +628,8 @@ public class OnlineGameManager extends GameManager{
     }
     private void endTurn() {
         turnTimer.stop(); // Stop the timer
+        timerLabel.setVisible(false); // Hide the timer label
+        
         projectileSelector.setCellFactory(param -> new ListCell<>() {
             private final ImageView imageView = new ImageView();
 
@@ -722,7 +731,8 @@ public class OnlineGameManager extends GameManager{
             }
             myTurn = !myTurn; // Set turn to false immediately after sending
             Platform.runLater(() -> {
-                turnBanner.setText(isPlayer1 ? "Player 2's Turn" : "Player 1's Turn");
+                turnBanner.setText(isPlayer1 ? "Player 2" : "Player 1");
+                turnBanner.setStyle( isPlayer1 ? "-fx-text-fill: #FF0000;" : "-fx-text-fill: #0000FF;");
             });
         } catch (Exception e) {
             System.err.println("Error sending end turn data: " + e.getMessage());
