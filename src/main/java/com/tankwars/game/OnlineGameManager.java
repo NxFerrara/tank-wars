@@ -73,6 +73,7 @@ public class OnlineGameManager extends GameManager{
     private final Scene gameScene;
     private boolean isGameEnded = false;
     private final Stage stage;
+    private StackPane root;
 
     
     public OnlineGameManager(Stage primaryStage, Scene gameScene, int player1HP, int player2HP, 
@@ -82,17 +83,32 @@ public class OnlineGameManager extends GameManager{
         this.connection = connection;
         this.gameScene = gameScene;
         this.stage = primaryStage;
-        if (connection instanceof GameHost){
+        
+        // Initialize root StackPane
+        root = new StackPane();
+        gameScene.setRoot(root);
+        
+        if (connection instanceof GameHost) {
             this.isPlayer1 = true;
-        }
-        else{
+            int randomSeed = new Random().nextInt(1000000);
+            try {
+                ((GameHost) connection).sendMessage("SEED:" + randomSeed);
+                terrain = new Terrain(800, randomSeed);
+            } catch (Exception e) {
+                System.err.println("Error sending seed: " + e.getMessage());
+            }
+        } else {
             this.myTurn = false;
+            try {
+                String message = ((GameClient) connection).receiveMessage();
+                if (message.startsWith("SEED:")) {
+                    int seed = Integer.parseInt(message.split(":")[1]);
+                    terrain = new Terrain(800, seed);
+                }
+            } catch (Exception e) {
+                System.err.println("Error receiving seed: " + e.getMessage());
+            }
         }
-        StackPane root = (StackPane) gameScene.getRoot();
-        root.setPrefSize(800, 600); // Example size
-        root.prefWidthProperty().bind(gameScene.widthProperty());
-        root.prefHeightProperty().bind(gameScene.heightProperty());
-        terrain = new Terrain(800, 100);
         this.player1proj = player1proj;
         this.player2proj = player2proj;
         // Place tanks at opposite ends of the terrain
@@ -410,6 +426,13 @@ public class OnlineGameManager extends GameManager{
     }
     private void processMessage(String message) {
         if (message == null || message.isEmpty()) return;
+        
+        if (message.startsWith("SEED:")) {
+            String[] parts = message.split(":");
+            int seed = Integer.parseInt(parts[1]);
+            terrain = new Terrain(800, seed); // Use the received seed
+            return;
+        }
         
         if (message.startsWith("HP_UPDATE:")) {
             String[] parts = message.split(":");
