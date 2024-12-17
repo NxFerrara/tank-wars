@@ -70,7 +70,9 @@ public class OnlineGameManager extends GameManager{
     private FiredProjectile activeProjectile;
     private final Label notificationLabel;
     private final Button backButton;
-
+    private final Scene gameScene;
+    private boolean isGameEnded = false;
+    private final Stage stage;
 
     
     public OnlineGameManager(Stage primaryStage, Scene gameScene, int player1HP, int player2HP, 
@@ -78,6 +80,8 @@ public class OnlineGameManager extends GameManager{
     int[] player2proj, Object connection) {
         super(gameScene);
         this.connection = connection;
+        this.gameScene = gameScene;
+        this.stage = primaryStage;
         if (connection instanceof GameHost){
             this.isPlayer1 = true;
         }
@@ -218,12 +222,11 @@ public class OnlineGameManager extends GameManager{
         );
         backButton.setVisible(false);
         backButton.setDisable(true);
-        backButton.setOnAction( e -> {
+        backButton.setOnAction(e -> {
+            cleanup();
             MenuScene menuManager = new MenuScene(null);
-        // Set the initial scene to the menu
-            Scene menuScene = menuManager.createMenuScene(primaryStage);
-            primaryStage.setTitle("Tank Wars");
-            primaryStage.setScene(menuScene);
+            Scene menuScene = menuManager.createMenuScene(stage);
+            stage.setScene(menuScene);
         });
         StackPane.setAlignment(backButton, Pos.CENTER);
         projectileSelector = new ComboBox<Projectile>();
@@ -363,6 +366,8 @@ public class OnlineGameManager extends GameManager{
     
     public void setupInput(Scene scene) {
         scene.setOnKeyPressed(e -> {
+            if (!myTurn) return; // Don't process inputs if it's not my turn
+            
             if (e.getCode() == KeyCode.A) {
                 leftPressed = true;
                 updateTankMovement();
@@ -385,12 +390,14 @@ public class OnlineGameManager extends GameManager{
                     player2.adjustBarrelAngle(false);
                 }
             }
-            if (e.getCode() == KeyCode.SPACE){
+            if (e.getCode() == KeyCode.SPACE) {
                 fire();
             }
         });
         
         scene.setOnKeyReleased(e -> {
+            if (!myTurn) return;
+            
             if (e.getCode() == KeyCode.A) {
                 leftPressed = false;
                 updateTankMovement();
@@ -402,46 +409,78 @@ public class OnlineGameManager extends GameManager{
         });
     }
     private void processMessage(String message) {
-    if (message.startsWith("END_TURN:")) {
-        String[] parts = message.split(":");
-        double opponentX = Double.parseDouble(parts[1]);
-        double opponentY = Double.parseDouble(parts[2]);
-        int opponentFuel = Integer.parseInt(parts[3]);
-        int myHP = Integer.parseInt(parts[4]);
-        String isActive = parts[5];
+        if (message == null || message.isEmpty()) return;
+        
+        if (message.startsWith("HP_UPDATE:")) {
+            String[] parts = message.split(":");
+            if (parts.length < 3) return;  // Expect HP_UPDATE:player1HP:player2HP
+            
+            try {
+                int p1HP = Integer.parseInt(parts[1]);
+                int p2HP = Integer.parseInt(parts[2]);
+                Platform.runLater(() -> {
+                    player1.sethp(p1HP);
+                    player2.sethp(p2HP);
+                    // Update HP visuals
+                    player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
+                    player1HPText.setText(String.valueOf(player1.gethp()));
+                    player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
+                    player2HPText.setText(String.valueOf(player2.gethp()));
+                });
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing HP update: " + e.getMessage());
+            }
+        } else if (message.startsWith("END_TURN:")) {
+            String[] parts = message.split(":");
+            if (parts.length < 6) {
+                System.err.println("Invalid message format received: " + message);
+                return;
+            }
+            
+            try {
+                double opponentX = Double.parseDouble(parts[1]);
+                double opponentY = Double.parseDouble(parts[2]);
+                int opponentFuel = Integer.parseInt(parts[3]);
+                int myHP = Integer.parseInt(parts[4]);
+                String isActive = parts[5];
+                double barrelAngle = Double.parseDouble(parts[6]);
 
-        // Update variables on the opponent's turn
-        Platform.runLater(() -> {
-            if (!isPlayer1) {
-                player1.setPosition(opponentX, opponentY);
-                player1.setFuel(opponentFuel);
-                player2.sethp(myHP);
-                renderTankUpdates();
-                if (isActive.equals("false")){
-                    powerUp.collect();
-                }
+                Platform.runLater(() -> {
+                    if (!isPlayer1) {
+                        player1.setPosition(opponentX, opponentY);
+                        player1.setFuel(opponentFuel);
+                        player1.setBarrelAngle(barrelAngle);
+                        player2.sethp(myHP);
+                    } else {
+                        player2.setPosition(opponentX, opponentY);
+                        player2.setFuel(opponentFuel);
+                        player2.setBarrelAngle(barrelAngle);
+                        player1.sethp(myHP);
+                    }
+                    
+                    renderTankUpdates();
+                    
+                    if (isActive.equals("false")) {
+                        powerUp.collect();
+                    }
+                    
+                    myTurn = true;
+                    startTurn();
+                    turnBanner.setText(isPlayer1 ? "Player 1's Turn" : "Player 2's Turn");
+                });
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing message values: " + e.getMessage());
             }
-            else{
-                player2.setPosition(opponentX, opponentY);
-                player2.setFuel(opponentFuel);
-                player1.sethp(myHP);
-                renderTankUpdates();
-                if (isActive.equals("false")){
-                    powerUp.collect();
-                }
-            }
-        });
-        if (!myTurn) {
-            myTurn = true;
-            startTurn();
-        }}
-    else{
-        gameLoop.stop();
-        showNotification(message, 100); 
-        fireButton.setDisable(true);
-        backButton.setVisible(true);
-        backButton.setDisable(false);
-    }
+        } else if (message.contains("Wins!")) {
+            Platform.runLater(() -> {
+                gameLoop.stop();
+                showNotification(message, 100);
+                fireButton.setDisable(true);
+                backButton.setVisible(true);
+                backButton.setDisable(false);
+            });
+        }
+
     }
 
     private void renderTankUpdates() {
@@ -456,9 +495,8 @@ public class OnlineGameManager extends GameManager{
         // Update Player 2 visuals
         player2HPTank.setHeight(((double) player2.gethp() / player2MaxHP) * 100);
         player2HPText.setText(String.valueOf(player2.gethp()));
-        physics.update(player1, terrain);
-        physics.update(player2, terrain);
     }
+    
     private void updateTankMovement() {
         player1FuelTank.setHeight(((double)player1.getFuel()/player1MaxFuel)*100);
         player1FuelText.setText(String.valueOf(player1.getFuel())); // Update fuel number
@@ -516,31 +554,35 @@ public class OnlineGameManager extends GameManager{
         }
         
     }
-    private void fire() {
-        if (activeProjectile != null) return; // Don't fire if projectile is active
+    
+    protected void fire() {
+        if (!myTurn || activeProjectile != null) return;
         
-        String projType = projectileSelector.getValue().getName();
-        String imagePath = projectileSelector.getValue().getImagePath();
+        Tank currentTank = isPlayer1 ? player1 : player2;
+        Projectile selectedProjectile = projectileSelector.getSelectionModel().getSelectedItem();
         
-        // Check ammo and consume it
-        if (isPlayer1) {
-            if (projType.equals("Big Bomb") && player1proj[0] <= 0) return;
-            if (projType.equals("Sniper") && player1proj[1] <= 0) return;
+        if (selectedProjectile != null) {
+            String projType = selectedProjectile.getName();
             
-            // Consume ammo if not basic projectile
-            if (projType.equals("Big Bomb")) player1proj[0]--;
-            else if (projType.equals("Sniper")) player1proj[1]--;
+            // Check ammo and consume it
+            if (isPlayer1) {
+                if (projType.equals("Big Bomb") && player1proj[0] <= 0) return;
+                if (projType.equals("Sniper") && player1proj[1] <= 0) return;
+                
+                if (projType.equals("Big Bomb")) player1proj[0]--;
+                else if (projType.equals("Sniper")) player1proj[1]--;
+            } else {
+                if (projType.equals("Big Bomb") && player2proj[0] <= 0) return;
+                if (projType.equals("Sniper") && player2proj[1] <= 0) return;
+                
+                if (projType.equals("Big Bomb")) player2proj[0]--;
+                else if (projType.equals("Sniper")) player2proj[1]--;
+            }
             
-            activeProjectile = player1.fireProjectile(projType, imagePath);
-        } else {
-            if (projType.equals("Big Bomb") && player2proj[0] <= 0) return;
-            if (projType.equals("Sniper") && player2proj[1] <= 0) return;
+            // Create and fire projectile
+            activeProjectile = currentTank.fireProjectile(projType, selectedProjectile.getImagePath());
             
-            // Consume ammo if not basic projectile
-            if (projType.equals("Big Bomb")) player2proj[0]--;
-            else if (projType.equals("Sniper")) player2proj[1]--;
-            
-            activeProjectile = player2.fireProjectile(projType, imagePath);
+            fireButton.setDisable(true);
         }
     }
     
@@ -568,6 +610,12 @@ public class OnlineGameManager extends GameManager{
             turnBanner.setText("Player 2");
             turnBanner.setStyle("-fx-text-fill: #FF0000;");
         }
+        
+        // Re-enable fire button if it's my turn
+        if (myTurn) {
+            fireButton.setDisable(false);
+        }
+        
         // Start the turn timer
         turnTimer.play();
     }
@@ -657,91 +705,155 @@ public class OnlineGameManager extends GameManager{
         leftPressed = false;
         rightPressed = false;
         updateTankMovement(); 
-        String endTurnData = "";
-        if(isPlayer1){
-            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s",
-            player1.getX(), player1.getY(), player1.getFuel(), player2.gethp(), powerUp.isActive());
+        String endTurnData;
+        if (isPlayer1) {
+            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s:%f",
+                player1.getX(), player1.getY(), player1.getFuel(), player2.gethp(), powerUp.isActive(), player1.getBarrelAngle());
+        } else {
+            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s:%f",
+                player2.getX(), player2.getY(), player2.getFuel(), player1.gethp(), powerUp.isActive(), player2.getBarrelAngle());
         }
-        else{
-            endTurnData = String.format("END_TURN:%f:%f:%d:%d:%s",
-            player2.getX(), player2.getY(), player2.getFuel(), player1.gethp(), powerUp.isActive());
+
+        try {
+            if (connection instanceof GameHost) {
+                ((GameHost) connection).sendMessage(endTurnData);
+            } else if (connection instanceof GameClient) {
+                ((GameClient) connection).sendMessage(endTurnData);
+            }
+            myTurn = !myTurn; // Set turn to false immediately after sending
+            Platform.runLater(() -> {
+                turnBanner.setText(isPlayer1 ? "Player 2's Turn" : "Player 1's Turn");
+            });
+        } catch (Exception e) {
+            System.err.println("Error sending end turn data: " + e.getMessage());
         }
-        if (connection instanceof GameHost) {
-            ((GameHost) connection).sendMessage(endTurnData);
-        } else if (connection instanceof GameClient) {
-            ((GameClient) connection).sendMessage(endTurnData);
-        }    
-        myTurn = !myTurn; // Switch turns
     }
+    
     public void update() {
-        if (myTurn) {
-            player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
-            player1HPText.setText(String.valueOf(player1.gethp()));
+        // Always update visuals and physics regardless of turn
+        renderTankUpdates();
         
-            player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
-            player2HPText.setText(String.valueOf(player2.gethp()));
-            physics.update(player1, terrain);
-            physics.update(player2, terrain);
-            checkPowerUpCollision();
-            
-            if (activeProjectile != null) {
-                if (activeProjectile.isActive()) {
-                    activeProjectile.update();
+        player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
+        player1HPText.setText(String.valueOf(player1.gethp()));
+
+        player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
+        player2HPText.setText(String.valueOf(player2.gethp()));
+        physics.update(player1, terrain);
+        physics.update(player2, terrain);
+        checkPowerUpCollision();
+        
+        // Only handle projectile updates during my turn
+        if (activeProjectile != null) {
+            if (activeProjectile.isActive()) {
+                activeProjectile.update();
+                
+                if (activeProjectile.getY() >= terrain.getHeightAt((int)activeProjectile.getX()) ||
+                    activeProjectile.getX() < 0 || activeProjectile.getX() > terrain.getWidth()) {
+                    activeProjectile.deactivate();
+                    Explosion explosion = activeProjectile.getExplosion();
                     
-                    if (activeProjectile.getY() >= terrain.getHeightAt((int)activeProjectile.getX()) ||
-                        activeProjectile.getX() < 0 || activeProjectile.getX() > terrain.getWidth()) {
-                        activeProjectile.deactivate();
-                        // Check damage immediately when explosion is created
-                        Explosion explosion = activeProjectile.getExplosion();
-                        explosion.checkTankDamage(player1);
-                        explosion.checkTankDamage(player2);
-                        explosion.setDamageDealt(true);
+                    // Store HP before damage
+                    int p1HPBefore = player1.gethp();
+                    int p2HPBefore = player2.gethp();
+                    
+                    explosion.checkTankDamage(player1);
+                    explosion.checkTankDamage(player2);
+                    explosion.setDamageDealt(true);
+                    
+                    // If HP changed, send update
+                    if (p1HPBefore != player1.gethp() || p2HPBefore != player2.gethp()) {
+                        try {
+                            String hpUpdateMessage = String.format("HP_UPDATE:%d:%d", player1.gethp(), player2.gethp());
+                            if (connection instanceof GameHost) {
+                                ((GameHost) connection).sendMessage(hpUpdateMessage);
+                            } else if (connection instanceof GameClient) {
+                                ((GameClient) connection).sendMessage(hpUpdateMessage);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error sending HP update: " + e.getMessage());
+                        }
                     }
-                } else {
-                    activeProjectile.update();
-                    if (activeProjectile.getExplosion() != null && !activeProjectile.getExplosion().isActive()) {
-                        activeProjectile = null;
-                        endTurn();
-                    }
+                    
+                    // Update HP visuals immediately
+                    Platform.runLater(() -> {
+                        player1HPTank.setHeight(((double)player1.gethp()/player1MaxHP)*100);
+                        player1HPText.setText(String.valueOf(player1.gethp()));
+                        player2HPTank.setHeight(((double)player2.gethp()/player2MaxHP)*100);
+                        player2HPText.setText(String.valueOf(player2.gethp()));
+                    });
+                }
+            } else {
+                activeProjectile.update();
+                if (activeProjectile.getExplosion() != null && !activeProjectile.getExplosion().isActive()) {
+                    activeProjectile = null;
+                    if (myTurn) endTurn();  // Only end turn if it's my turn
                 }
             }
-            
+        }
+
+        if (myTurn) {
+            // Handle win conditions and network messages only during my turn
             if (player1.gethp() <= 0) {
                 gameLoop.stop();
+                isGameEnded = true;
                 showNotification("Player 2 Wins!", 100);
-                if (connection instanceof GameHost) {
-                    ((GameHost) connection).sendMessage("Player 2 Wins!"); 
+                // Send win message regardless of connection type
+                try {
+                    if (connection instanceof GameHost) {
+                        ((GameHost) connection).sendMessage("Player 2 Wins!");
+                        ((GameHost) connection).close();  // Close the connection
+                    } else if (connection instanceof GameClient) {
+                        ((GameClient) connection).sendMessage("Player 2 Wins!");
+                        ((GameClient) connection).close();  // Close the connection
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error sending win message: " + e.getMessage());
+                }
                 fireButton.setDisable(true);
                 backButton.setVisible(true);
                 backButton.setDisable(false);
                 return;
             } else if (player2.gethp() <= 0) {
                 gameLoop.stop();
+                isGameEnded = true;
                 showNotification("Player 1 Wins!", 100);
-                if (connection instanceof GameClient) {
-                    ((GameClient) connection).sendMessage("Player 1 Wins!"); 
+                // Send win message regardless of connection type
+                try {
+                    if (connection instanceof GameHost) {
+                        ((GameHost) connection).sendMessage("Player 1 Wins!");
+                        ((GameHost) connection).close();  // Close the connection
+                    } else if (connection instanceof GameClient) {
+                        ((GameClient) connection).sendMessage("Player 1 Wins!");
+                        ((GameClient) connection).close();  // Close the connection
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error sending win message: " + e.getMessage());
+                }
                 fireButton.setDisable(true);
                 backButton.setVisible(true);
                 backButton.setDisable(false);
                 return;
             }
-            }
         } else {
             // Listen for opponent's end-turn data
             try {
-                String message = "";
+                String message = null;
                 if (connection instanceof GameHost) {
-                    message = ((GameHost) connection).receiveMessage();
+                    message = ((GameHost) connection).receiveMessageNonBlocking();
                 } else if (connection instanceof GameClient) {
-                    message = ((GameClient) connection).receiveMessage();
+                    message = ((GameClient) connection).receiveMessageNonBlocking();
                 }
-                if (!message.isEmpty()) {
+                
+                if (message != null && !message.isEmpty()) {
                     processMessage(message);
                 }
             } catch (IOException e) {
                 System.err.println("Error receiving message: " + e.getMessage());
+                Platform.runLater(() -> {
+                    showNotification("Connection error! Game ending.", 100);
+                    gameLoop.stop();
+                });
             }
-        }
         }
     }
 
@@ -811,5 +923,24 @@ public class OnlineGameManager extends GameManager{
     public PowerUp getPowerup(){ return powerUp;}
     public void manuallyEndTurn() {
         endTurn(); // Allows the user to manually end the turn
+    }
+
+    @Override
+    public FiredProjectile getActiveProjectile() {
+        return activeProjectile;
+    }
+
+    public void cleanup() {
+        if (connection != null) {
+            try {
+                if (connection instanceof GameHost) {
+                    ((GameHost) connection).close();
+                } else if (connection instanceof GameClient) {
+                    ((GameClient) connection).close();
+                }
+            } catch (Exception e) {
+                System.err.println("Error closing connection: " + e.getMessage());
+            }
+        }
     }
 } 

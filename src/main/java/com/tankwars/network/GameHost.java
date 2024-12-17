@@ -17,10 +17,10 @@ public class GameHost {
     public Socket acceptConnection() throws IOException {
         // Wait for a client to connect
         System.out.println("Waiting for a client to connect...");
-        Socket socket = serverSocket.accept(); // Block until a connection is made
+        socket = serverSocket.accept(); // Store the socket in the field
         System.out.println("Client connected: " + socket.getInetAddress());
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.out = new PrintWriter(socket.getOutputStream(), true); // Initialize `out`
+        this.out = new PrintWriter(socket.getOutputStream(), true);
         return socket;
     }
 
@@ -31,15 +31,18 @@ public class GameHost {
     public String receiveMessage() throws IOException {
         return in.readLine();
     }
+
     public String receiveMessageNonBlocking() throws IOException {
-        if (in.ready()) { // Check if data is available
+        if (in.ready()) {
             return in.readLine();
         }
         return null;
     }
 
     public void close() throws IOException {
-        socket.close();
-        serverSocket.close();
+        if (in != null) in.close();
+        if (out != null) out.close();
+        if (socket != null) socket.close();
+        if (serverSocket != null) serverSocket.close();
     }
 }

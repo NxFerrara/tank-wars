@@ -122,6 +122,11 @@ public class Tank {
         double startX = x + Math.cos(radians) * barrelLength;
         double startY = barrelBaseY - Math.sin(radians) * barrelLength;
         
+        // Add "file:" prefix if it's not already there
+        if (!imagePath.startsWith("file:")) {
+            imagePath = "file:" + imagePath;
+        }
+        
         double power = switch(type) {
             case "Basic" -> 4;
             case "Big Bomb" -> 3;

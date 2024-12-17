@@ -35,6 +35,14 @@ public class GameClient {
     }
 
     public void close() throws IOException {
-        socket.close();
+        if (socket != null) {
+            socket.close();
+        }
+        if (in != null) {
+            in.close();
+        }
+        if (out != null) {
+            out.close();
+        }
     }
 }
